@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
 #include <zephyr/init.h>
 #include <errno.h>
 #include <zephyr/lorawan/lorawan.h>

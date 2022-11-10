@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#define DT_DRV_COMPAT litex_uart0
+#define DT_DRV_COMPAT litex_uart1
 
 #include <zephyr/kernel.h>
 #include <zephyr/arch/cpu.h>

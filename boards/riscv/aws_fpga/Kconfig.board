@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_AWS_FPGA
+	bool "AWS RISCV32 target"
+	depends on SOC_RISCV_AWS
+	select QEMU_TARGET
+	select RISCV_ISA_EXT_G

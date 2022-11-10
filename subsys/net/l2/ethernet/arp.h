@@ -54,8 +54,10 @@ struct arp_entry {
 	uint32_t req_start;
 	struct net_if *iface;
 	struct in_addr ip;
-	struct net_eth_addr eth;
-	struct k_fifo pending_queue;
+	union {
+		struct net_pkt *pending;
+		struct net_eth_addr eth;
+	};
 };
 
 typedef void (*net_arp_cb_t)(struct arp_entry *entry,

@@ -1,0 +1,24 @@
+/dts-v1/;
+
+/ {
+	#address-cells = < 0x01 >;
+	#size-cells = < 0x01 >;
+
+	soc {
+		#address-cells = < 0x01 >;
+		#size-cells = < 0x01 >;
+		compatible = "simple-bus";
+		ranges;
+
+		uartlite0: uartlite@88000000 {
+			compatible = "xlnx,xps-uartlite-1.00.a";
+			reg = <0x88000000 0x88200000>;
+	 	};
+
+		DDR: memory@80000000 {
+		device_type = "memory";
+		reg = < 0x80000000 0x80200000 >;
+		};
+
+	};
+};

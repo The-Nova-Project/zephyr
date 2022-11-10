@@ -30,24 +30,18 @@ static sys_slist_t arp_free_entries;
 static sys_slist_t arp_pending_entries;
 static sys_slist_t arp_table;
 
-static struct k_work_delayable arp_request_timer;
-
-static struct k_mutex arp_mutex;
+struct k_work_delayable arp_request_timer;
 
 static void arp_entry_cleanup(struct arp_entry *entry, bool pending)
 {
 	NET_DBG("%p", entry);
 
 	if (pending) {
-		struct net_pkt *pkt;
-
-		while (!k_fifo_is_empty(&entry->pending_queue)) {
-			pkt = k_fifo_get(&entry->pending_queue, K_FOREVER);
-			NET_DBG("Releasing pending pkt %p (ref %ld)",
-				pkt,
-				atomic_get(&pkt->atomic_ref) - 1);
-			net_pkt_unref(pkt);
-		}
+		NET_DBG("Releasing pending pkt %p (ref %ld)",
+			entry->pending,
+			atomic_get(&entry->pending->atomic_ref) - 1);
+		net_pkt_unref(entry->pending);
+		entry->pending = NULL;
 	}
 
 	entry->iface = NULL;
@@ -190,8 +184,6 @@ static void arp_request_timeout(struct k_work *work)
 
 	ARG_UNUSED(work);
 
-	k_mutex_lock(&arp_mutex, K_FOREVER);
-
 	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&arp_pending_entries,
 					  entry, next, node) {
 		if ((int32_t)(entry->req_start +
@@ -212,8 +204,6 @@ static void arp_request_timeout(struct k_work *work)
 				  K_MSEC(entry->req_start +
 					 ARP_REQUEST_TIMEOUT - current));
 	}
-
-	k_mutex_unlock(&arp_mutex);
 }
 
 static inline struct in_addr *if_get_addr(struct net_if *iface,
@@ -281,7 +271,7 @@ static inline struct net_pkt *arp_prepare(struct net_if *iface,
 	 * request and we want to send it again.
 	 */
 	if (entry) {
-		k_fifo_put(&entry->pending_queue, net_pkt_ref(pending));
+		entry->pending = net_pkt_ref(pending);
 		entry->iface = net_pkt_iface(pkt);
 
 		net_ipaddr_copy(&entry->ip, next_addr);
@@ -363,8 +353,6 @@ struct net_pkt *net_arp_prepare(struct net_pkt *pkt,
 		addr = request_ip;
 	}
 
-	k_mutex_lock(&arp_mutex, K_FOREVER);
-
 	/* If the destination address is already known, we do not need
 	 * to send any ARP packet.
 	 */
@@ -381,16 +369,7 @@ struct net_pkt *net_arp_prepare(struct net_pkt *pkt,
 				entry = arp_entry_get_last_from_table();
 			}
 		} else {
-			/* There is a pending ARP request already, check if this packet is already
-			 * in the pending list and if so, resend the request, otherwise just
-			 * append the packet to the request fifo list.
-			 */
-			if (k_queue_unique_append(&entry->pending_queue._queue,
-						  net_pkt_ref(pkt))) {
-				k_mutex_unlock(&arp_mutex);
-				return NULL;
-			}
-
+			/* There is a pending already */
 			entry = NULL;
 		}
 
@@ -405,11 +384,8 @@ struct net_pkt *net_arp_prepare(struct net_pkt *pkt,
 			NET_DBG("Resending ARP %p", req);
 		}
 
-		k_mutex_unlock(&arp_mutex);
 		return req;
 	}
-
-	k_mutex_unlock(&arp_mutex);
 
 	net_pkt_lladdr_src(pkt)->addr =
 		(uint8_t *)net_if_get_link_addr(entry->iface)->addr;
@@ -456,8 +432,6 @@ static void arp_update(struct net_if *iface,
 
 	NET_DBG("src %s", net_sprint_ipv4_addr(src));
 
-	k_mutex_lock(&arp_mutex, K_FOREVER);
-
 	entry = arp_entry_get_pending(iface, src);
 	if (!entry) {
 		if (IS_ENABLED(CONFIG_NET_ARP_GRATUITOUS) && gratuitous) {
@@ -492,31 +466,27 @@ static void arp_update(struct net_if *iface,
 			}
 		}
 
-		k_mutex_unlock(&arp_mutex);
 		return;
 	}
+
+	/* Set the dst in the pending packet */
+	net_pkt_lladdr_dst(entry->pending)->len = sizeof(struct net_eth_addr);
+	net_pkt_lladdr_dst(entry->pending)->addr =
+		(uint8_t *) &NET_ETH_HDR(entry->pending)->dst.addr;
+
+	NET_DBG("dst %s pending %p frag %p",
+		net_sprint_ipv4_addr(&entry->ip),
+		entry->pending, entry->pending->frags);
+
+	pkt = entry->pending;
+	entry->pending = NULL;
 
 	memcpy(&entry->eth, hwaddr, sizeof(struct net_eth_addr));
 
 	/* Inserting entry into the table */
 	sys_slist_prepend(&arp_table, &entry->node);
 
-	while (!k_fifo_is_empty(&entry->pending_queue)) {
-		pkt = k_fifo_get(&entry->pending_queue, K_FOREVER);
-
-		/* Set the dst in the pending packet */
-		net_pkt_lladdr_dst(pkt)->len = sizeof(struct net_eth_addr);
-		net_pkt_lladdr_dst(pkt)->addr =
-			(uint8_t *) &NET_ETH_HDR(pkt)->dst.addr;
-
-		NET_DBG("dst %s pending %p frag %p",
-			net_sprint_ipv4_addr(&entry->ip),
-			pkt, pkt->frags);
-
-		net_if_queue_tx(iface, pkt);
-	}
-
-	k_mutex_unlock(&arp_mutex);
+	net_if_queue_tx(iface, pkt);
 }
 
 static inline struct net_pkt *arp_prepare_reply(struct net_if *iface,
@@ -706,8 +676,6 @@ void net_arp_clear_cache(struct net_if *iface)
 
 	NET_DBG("Flushing ARP table");
 
-	k_mutex_lock(&arp_mutex, K_FOREVER);
-
 	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&arp_table, entry, next, node) {
 		if (iface && iface != entry->iface) {
 			prev = &entry->node;
@@ -740,8 +708,6 @@ void net_arp_clear_cache(struct net_if *iface)
 	if (sys_slist_is_empty(&arp_pending_entries)) {
 		k_work_cancel_delayable(&arp_request_timer);
 	}
-
-	k_mutex_unlock(&arp_mutex);
 }
 
 int net_arp_foreach(net_arp_cb_t cb, void *user_data)
@@ -749,14 +715,10 @@ int net_arp_foreach(net_arp_cb_t cb, void *user_data)
 	int ret = 0;
 	struct arp_entry *entry;
 
-	k_mutex_lock(&arp_mutex, K_FOREVER);
-
 	SYS_SLIST_FOR_EACH_CONTAINER(&arp_table, entry, node) {
 		ret++;
 		cb(entry, user_data);
 	}
-
-	k_mutex_unlock(&arp_mutex);
 
 	return ret;
 }
@@ -774,14 +736,11 @@ void net_arp_init(void)
 	sys_slist_init(&arp_table);
 
 	for (i = 0; i < CONFIG_NET_ARP_TABLE_SIZE; i++) {
-		/* Inserting entry as free with initialised packet queue */
-		k_fifo_init(&arp_entries[i].pending_queue);
+		/* Inserting entry as free */
 		sys_slist_prepend(&arp_free_entries, &arp_entries[i].node);
 	}
 
 	k_work_init_delayable(&arp_request_timer, arp_request_timeout);
-
-	k_mutex_init(&arp_mutex);
 
 	arp_cache_initialized = true;
 }

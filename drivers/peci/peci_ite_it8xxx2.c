@@ -17,7 +17,6 @@
 #include <soc_dt.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/util.h>
-#include <zephyr/irq.h>
 
 LOG_MODULE_REGISTER(peci_ite_it8xxx2, CONFIG_PECI_LOG_LEVEL);
 

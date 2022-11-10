@@ -21,7 +21,6 @@
 #include "dma_mcux_edma.h"
 
 #include <zephyr/logging/log.h>
-#include <zephyr/irq.h>
 
 #define DT_DRV_COMPAT nxp_mcux_edma
 

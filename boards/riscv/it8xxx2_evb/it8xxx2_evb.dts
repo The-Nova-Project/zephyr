@@ -16,10 +16,6 @@
 	aliases {
 		i2c-0 = &i2c0;
 		peci-0 = &peci0;
-		led0 = &led0;
-		kscan0 = &kscan0;
-		watchdog0 = &twd0;
-		pwm-0 = &pwm0;
 	};
 
 	chosen {
@@ -31,6 +27,13 @@
 		zephyr,flash-controller = &flashctrl;
 		zephyr,code-partition = &slot0_partition;
 		zephyr,keyboard-scan = &kscan0;
+	};
+
+	aliases {
+		led0 = &led0;
+		kscan0 = &kscan0;
+		watchdog0 = &twd0;
+		pwm-0 = &pwm0;
 	};
 
 	leds {

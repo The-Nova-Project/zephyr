@@ -116,10 +116,10 @@ References
 .. target-notes::
 
 .. _Serpente documentation:
-    https://www.solder.party/docs/serpente/r2/
+    https://serpente.solder.party/r2/
 
 .. _pinouts:
-    https://www.solder.party/docs/serpente/r2/pinout/
+    https://serpente.solder.party/r2/docs/pinout/
 
 .. _schematic:
-    https://www.solder.party/docs/serpente/r2/downloads/
+    https://serpente.solder.party/r2/docs/downloads/

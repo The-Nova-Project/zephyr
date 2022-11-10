@@ -9,7 +9,6 @@
 #include <string.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/dt-bindings/gpio/nordic-nrf-gpio.h>
-#include <zephyr/irq.h>
 #include "gpio_utils.h"
 
 struct gpio_nrfx_data {

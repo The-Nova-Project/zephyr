@@ -1,6 +1,6 @@
 identifier: nsim_sem
 name: SEM Nsim simulator
-type: sim
+type: mcu
 arch: arc
 simulation: nsim
 toolchain:

@@ -25,7 +25,6 @@ LOG_MODULE_REGISTER(eth_gecko, CONFIG_ETHERNET_LOG_LEVEL);
 #include <zephyr/net/ethernet.h>
 #include <ethernet/eth_stats.h>
 #include <em_cmu.h>
-#include <zephyr/irq.h>
 
 #include "phy_gecko.h"
 #include "eth_gecko_priv.h"
@@ -520,7 +519,7 @@ static void eth_iface_init(struct net_if *iface)
 	dev_data->link_up = false;
 	ethernet_init(iface);
 
-	net_if_carrier_off(iface);
+	net_if_flag_set(iface, NET_IF_NO_AUTO_START);
 
 	/* Generate MAC address, possibly used for filtering */
 	generate_mac(dev_data->mac_addr);

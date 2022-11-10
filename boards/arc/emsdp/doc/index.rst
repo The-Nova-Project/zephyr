@@ -45,7 +45,7 @@ The following table shows the hardware features supported for different core con
 +-----------+-----+-----+------+------+----------+------+-------+
 
 For hardware feature details, refer to : `ARC EM Software Development Platform
-<https://embarc.org/project/arc-em-software-development-platform-sdp/>`__
+<https://embarc.org/embarc_osp/doc/build/html/board/emsdp.html>`__
 
 
 Programming and Debugging

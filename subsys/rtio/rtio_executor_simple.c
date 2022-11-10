@@ -41,10 +41,8 @@ int rtio_simple_submit(struct rtio *r)
  */
 void rtio_simple_ok(struct rtio *r, const struct rtio_sqe *sqe, int result)
 {
-	void *userdata = sqe->userdata;
-
+	rtio_cqe_submit(r, result, sqe->userdata);
 	rtio_spsc_release(r->sq);
-	rtio_cqe_submit(r, result, userdata);
 	rtio_simple_submit(r);
 }
 
@@ -54,19 +52,18 @@ void rtio_simple_ok(struct rtio *r, const struct rtio_sqe *sqe, int result)
 void rtio_simple_err(struct rtio *r, const struct rtio_sqe *sqe, int result)
 {
 	struct rtio_sqe *nsqe;
-	void *userdata = sqe->userdata;
-	bool chained = sqe->flags & RTIO_SQE_CHAINED;
+	bool chained;
 
-	rtio_spsc_release(r->sq);
 	rtio_cqe_submit(r, result, sqe->userdata);
+	chained = sqe->flags & RTIO_SQE_CHAINED;
+	rtio_spsc_release(r->sq);
 
 	if (chained) {
 
 		nsqe = rtio_spsc_consume(r->sq);
 		while (nsqe != NULL && nsqe->flags & RTIO_SQE_CHAINED) {
-			userdata = nsqe->userdata;
+			rtio_cqe_submit(r, -ECANCELED, nsqe->userdata);
 			rtio_spsc_release(r->sq);
-			rtio_cqe_submit(r, -ECANCELED, userdata);
 			nsqe = rtio_spsc_consume(r->sq);
 		}
 

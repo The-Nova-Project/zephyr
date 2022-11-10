@@ -71,11 +71,6 @@
 #define PACKAGE_FLAGS 0
 #endif
 
-#ifdef CONFIG_LOG
-#undef CONFIG_LOG
-#define CONFIG_LOG 0
-#endif
-
 #include <zephyr/sys/cbprintf.h>
 #include "../../../lib/os/cbprintf.c"
 

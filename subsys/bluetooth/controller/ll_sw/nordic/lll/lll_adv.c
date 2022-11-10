@@ -332,10 +332,8 @@ int lll_adv_data_release(struct lll_adv_pdu *pdu)
 
 	last = pdu->last;
 	p = pdu->pdu[last];
-	if (p) {
-		pdu->pdu[last] = NULL;
-		mem_release(p, &mem_pdu.free);
-	}
+	pdu->pdu[last] = NULL;
+	mem_release(p, &mem_pdu.free);
 
 	last++;
 	if (last == DOUBLE_BUFFER_SIZE) {

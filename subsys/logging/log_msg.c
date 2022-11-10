@@ -52,8 +52,7 @@ void z_impl_z_log_msg_static_create(const void *source,
 	struct log_msg *msg;
 
 	if (inlen > 0) {
-		uint32_t flags = CBPRINTF_PACKAGE_CONVERT_RW_STR |
-				 CBPRINTF_PACKAGE_CONVERT_PTR_CHECK;
+		uint32_t flags = CBPRINTF_PACKAGE_CONVERT_RW_STR;
 		uint16_t strl[4];
 		int len;
 

@@ -9,13 +9,9 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/pinctrl.h>
-#include <zephyr/irq.h>
-#include <zephyr/kernel.h>
 #include <errno.h>
-#include <ilm.h>
 #include <soc.h>
 #include <soc_dt.h>
-#include <zephyr/dt-bindings/i2c/it8xxx2-i2c.h>
 #include <zephyr/pm/policy.h>
 #include <zephyr/sys/util.h>
 
@@ -51,7 +47,6 @@ struct i2c_it8xxx2_config {
 	/* I2C alternate configuration */
 	const struct pinctrl_dev_config *pcfg;
 	uint32_t clock_gate_offset;
-	bool fifo_enable;
 };
 
 enum i2c_pin_fun {
@@ -68,7 +63,7 @@ enum i2c_ch_status {
 
 struct i2c_it8xxx2_data {
 	enum i2c_ch_status i2ccs;
-	struct i2c_msg *active_msg;
+	struct i2c_msg *msgs;
 	struct k_mutex mutex;
 	struct k_sem device_sync_sem;
 #ifdef CONFIG_I2C_IT8XXX2_FIFO_MODE
@@ -302,8 +297,8 @@ void __soc_ram_code i2c_r_last_byte(const struct device *dev)
 	 * bit5, The firmware shall write 1 to this bit
 	 * when the next byte will be the last byte for i2c read.
 	 */
-	if ((data->active_msg->flags & I2C_MSG_STOP) &&
-	    (data->ridx == data->active_msg->len - 1)) {
+	if ((data->msgs->flags & I2C_MSG_STOP) &&
+	    (data->ridx == data->msgs->len - 1)) {
 		IT8XXX2_SMB_HOCTL(base) |= IT8XXX2_SMB_LABY;
 	}
 }
@@ -337,24 +332,18 @@ void __soc_ram_code i2c_fifo_en_w2r(const struct device *dev, bool enable)
 	unsigned int key = irq_lock();
 
 	if (enable) {
-		if (config->port == SMB_CHANNEL_A) {
+		if (config->port == 0) {
 			IT8XXX2_SMB_I2CW2RF |= IT8XXX2_SMB_MAIF |
 					       IT8XXX2_SMB_MAIFI;
-		} else if (config->port == SMB_CHANNEL_B) {
-			IT8XXX2_SMB_I2CW2RF |= IT8XXX2_SMB_MBCIF |
-					       IT8XXX2_SMB_MBIFI;
-		} else if (config->port == SMB_CHANNEL_C) {
+		} else if (config->port == 2) {
 			IT8XXX2_SMB_I2CW2RF |= IT8XXX2_SMB_MBCIF |
 					       IT8XXX2_SMB_MCIFI;
 		}
 	} else {
-		if (config->port == SMB_CHANNEL_A) {
+		if (config->port == 0) {
 			IT8XXX2_SMB_I2CW2RF &= ~(IT8XXX2_SMB_MAIF |
 						 IT8XXX2_SMB_MAIFI);
-		} else if (config->port == SMB_CHANNEL_B) {
-			IT8XXX2_SMB_I2CW2RF &= ~(IT8XXX2_SMB_MBCIF |
-						 IT8XXX2_SMB_MBIFI);
-		} else if (config->port == SMB_CHANNEL_C) {
+		} else if (config->port == 2) {
 			IT8XXX2_SMB_I2CW2RF &= ~(IT8XXX2_SMB_MBCIF |
 						 IT8XXX2_SMB_MCIFI);
 		}
@@ -372,7 +361,7 @@ void __soc_ram_code i2c_tran_fifo_write_start(const struct device *dev)
 	volatile uint8_t *reg_mstfctrl = config->reg_mstfctrl;
 
 	/* Clear start flag. */
-	data->active_msg->flags &= ~I2C_MSG_START;
+	data->msgs->flags &= ~I2C_MSG_START;
 	/* Enable SMB channel in FIFO mode. */
 	*reg_mstfctrl |= IT8XXX2_SMB_FFEN;
 	/* I2C enable. */
@@ -380,21 +369,21 @@ void __soc_ram_code i2c_tran_fifo_write_start(const struct device *dev)
 				   IT8XXX2_SMB_I2C_EN |
 				   IT8XXX2_SMB_SMHEN;
 	/* Set write byte counts. */
-	IT8XXX2_SMB_D0REG(base) = data->active_msg->len;
+	IT8XXX2_SMB_D0REG(base) = data->msgs->len;
 	/*
 	 * bit[7:1]: Address of the target.
 	 * bit[0]: Direction of the host transfer.
 	 */
 	IT8XXX2_SMB_TRASLA(base) = (uint8_t)data->addr_16bit << 1;
 	/* The maximum fifo size is 32 bytes. */
-	data->bytecnt = MIN(data->active_msg->len, I2C_FIFO_MODE_MAX_SIZE);
+	data->bytecnt = MIN(data->msgs->len, I2C_FIFO_MODE_MAX_SIZE);
 
 	for (i = 0; i < data->bytecnt; i++) {
 		/* Set host block data byte. */
-		IT8XXX2_SMB_HOBDB(base) = *(data->active_msg->buf++);
+		IT8XXX2_SMB_HOBDB(base) = *(data->msgs->buf++);
 	}
 	/* Calculate the remaining byte counts. */
-	data->bytecnt = data->active_msg->len - data->bytecnt;
+	data->bytecnt = data->msgs->len - data->bytecnt;
 	/*
 	 * bit[6] = 1b: Start.
 	 * bit[4:2] = 111b: Extend command.
@@ -418,7 +407,7 @@ void __soc_ram_code i2c_tran_fifo_write_next_block(const struct device *dev)
 
 	for (i = 0; i < _bytecnt; i++) {
 		/* Set host block data byte. */
-		IT8XXX2_SMB_HOBDB(base) = *(data->active_msg->buf++);
+		IT8XXX2_SMB_HOBDB(base) = *(data->msgs->buf++);
 	}
 	/* Clear FIFO block done status. */
 	*reg_mstfctrl |= IT8XXX2_SMB_BLKDS;
@@ -460,10 +449,10 @@ int __soc_ram_code i2c_tran_fifo_w2r_change_direction(const struct device *dev)
 				    IT8XXX2_SMB_I2C_SW_WAIT;
 	IT8XXX2_SMB_HOCTL2(base) &= ~IT8XXX2_SMB_I2C_SW_WAIT;
 	/* Point to the next msg for the read location. */
-	data->active_msg = &data->msgs_list[data->active_msg_index];
+	data->msgs = &data->msgs_list[data->active_msg_index];
 	/* Set read byte counts. */
-	IT8XXX2_SMB_D0REG(base) = data->active_msg->len;
-	data->bytecnt = data->active_msg->len;
+	IT8XXX2_SMB_D0REG(base) = data->msgs->len;
+	data->bytecnt = data->msgs->len;
 	/* W/C I2C W2R FIFO interrupt status. */
 	IT8XXX2_SMB_IWRFISTA = BIT(config->port);
 
@@ -478,15 +467,15 @@ void __soc_ram_code i2c_tran_fifo_read_start(const struct device *dev)
 	volatile uint8_t *reg_mstfctrl = config->reg_mstfctrl;
 
 	/* Clear start flag. */
-	data->active_msg->flags &= ~I2C_MSG_START;
-	/* Enable SMB channel in FIFO mode. */
+	data->msgs->flags &= ~I2C_MSG_START;
+	/* Enable SMB channel A or C in FIFO mode. */
 	*reg_mstfctrl |= IT8XXX2_SMB_FFEN;
 	/* I2C enable. */
 	IT8XXX2_SMB_HOCTL2(base) = IT8XXX2_SMB_SMD_TO_EN |
 				   IT8XXX2_SMB_I2C_EN |
 				   IT8XXX2_SMB_SMHEN;
 	/* Set read byte counts. */
-	IT8XXX2_SMB_D0REG(base) = data->active_msg->len;
+	IT8XXX2_SMB_D0REG(base) = data->msgs->len;
 	/*
 	 * bit[7:1]: Address of the target.
 	 * bit[0]: Direction of the host transfer.
@@ -494,7 +483,7 @@ void __soc_ram_code i2c_tran_fifo_read_start(const struct device *dev)
 	IT8XXX2_SMB_TRASLA(base) = (uint8_t)(data->addr_16bit << 1) |
 				   IT8XXX2_SMB_DIR;
 
-	data->bytecnt = data->active_msg->len;
+	data->bytecnt = data->msgs->len;
 	/*
 	 * bit[6] = 1b: Start.
 	 * bit[4:2] = 111b: Extend command.
@@ -515,7 +504,7 @@ void __soc_ram_code i2c_tran_fifo_read_next_block(const struct device *dev)
 
 	for (i = 0; i < I2C_FIFO_MODE_MAX_SIZE; i++) {
 		/* To get received data. */
-		*(data->active_msg->buf++) = IT8XXX2_SMB_HOBDB(base);
+		*(data->msgs->buf++) = IT8XXX2_SMB_HOBDB(base);
 	}
 	/* Clear FIFO block done status. */
 	*reg_mstfctrl |= IT8XXX2_SMB_BLKDS;
@@ -532,7 +521,7 @@ void __soc_ram_code i2c_tran_fifo_read_finish(const struct device *dev)
 
 	for (i = 0; i < data->bytecnt; i++) {
 		/* To get received data. */
-		*(data->active_msg->buf++) = IT8XXX2_SMB_HOBDB(base);
+		*(data->msgs->buf++) = IT8XXX2_SMB_HOBDB(base);
 	}
 	/* Clear byte count register. */
 	IT8XXX2_SMB_D0REG(base) = 0;
@@ -551,7 +540,7 @@ int __soc_ram_code i2c_tran_fifo_write_to_read(const struct device *dev)
 	volatile uint8_t *reg_mstfctrl = config->reg_mstfctrl;
 	int ret = 1;
 
-	if (data->active_msg->flags & I2C_MSG_START) {
+	if (data->msgs->flags & I2C_MSG_START) {
 		/* Enable I2C write to read FIFO mode. */
 		i2c_fifo_en_w2r(dev, 1);
 		i2c_tran_fifo_write_start(dev);
@@ -590,7 +579,7 @@ int __soc_ram_code i2c_tran_fifo_read(const struct device *dev)
 	uint8_t *base = config->base;
 	volatile uint8_t *reg_mstfctrl = config->reg_mstfctrl;
 
-	if (data->active_msg->flags & I2C_MSG_START) {
+	if (data->msgs->flags & I2C_MSG_START) {
 		i2c_tran_fifo_read_start(dev);
 	} else {
 		/* Check block done status. */
@@ -616,7 +605,7 @@ int __soc_ram_code i2c_tran_fifo_write(const struct device *dev)
 	uint8_t *base = config->base;
 	volatile uint8_t *reg_mstfctrl = config->reg_mstfctrl;
 
-	if (data->active_msg->flags & I2C_MSG_START) {
+	if (data->msgs->flags & I2C_MSG_START) {
 		i2c_tran_fifo_write_start(dev);
 	} else {
 		/* Check block done status. */
@@ -647,7 +636,7 @@ int __soc_ram_code i2c_fifo_transaction(const struct device *dev)
 	} else {
 		if (data->num_msgs == 2) {
 			return i2c_tran_fifo_write_to_read(dev);
-		} else if (data->active_msg->flags & I2C_MSG_READ) {
+		} else if (data->msgs->flags & I2C_MSG_READ) {
 			return i2c_tran_fifo_read(dev);
 		} else {
 			return i2c_tran_fifo_write(dev);
@@ -675,10 +664,10 @@ bool __soc_ram_code fifo_mode_allowed(const struct device *dev,
 		return false;
 	}
 	/*
-	 * FIFO2 only supports one channel of B or C. If the FIFO of
-	 * channel is not enabled, it will select PIO mode.
+	 * The I2C controller only supports two 32-bytes FIFOs, channel
+	 * B is not supported.
 	 */
-	if (!config->fifo_enable) {
+	if (config->port == 1) {
 		return false;
 	}
 	/*
@@ -728,7 +717,7 @@ int __soc_ram_code i2c_tran_read(const struct device *dev)
 	const struct i2c_it8xxx2_config *config = dev->config;
 	uint8_t *base = config->base;
 
-	if (data->active_msg->flags & I2C_MSG_START) {
+	if (data->msgs->flags & I2C_MSG_START) {
 		/* i2c enable */
 		IT8XXX2_SMB_HOCTL2(base) = IT8XXX2_SMB_SMD_TO_EN |
 					   IT8XXX2_SMB_I2C_EN |
@@ -740,7 +729,7 @@ int __soc_ram_code i2c_tran_read(const struct device *dev)
 		IT8XXX2_SMB_TRASLA(base) = (uint8_t)(data->addr_16bit << 1) |
 					   IT8XXX2_SMB_DIR;
 		/* clear start flag */
-		data->active_msg->flags &= ~I2C_MSG_START;
+		data->msgs->flags &= ~I2C_MSG_START;
 		/*
 		 * bit0, Host interrupt enable.
 		 * bit[2:4}, Extend command.
@@ -748,8 +737,8 @@ int __soc_ram_code i2c_tran_read(const struct device *dev)
 		 *       when the next byte will be the last byte.
 		 * bit6, start.
 		 */
-		if ((data->active_msg->len == 1) &&
-		    (data->active_msg->flags & I2C_MSG_STOP)) {
+		if ((data->msgs->len == 1) &&
+		    (data->msgs->flags & I2C_MSG_STOP)) {
 			IT8XXX2_SMB_HOCTL(base) = IT8XXX2_SMB_SRT |
 						  IT8XXX2_SMB_LABY |
 						  IT8XXX2_SMB_SMCD_EXTND |
@@ -773,16 +762,16 @@ int __soc_ram_code i2c_tran_read(const struct device *dev)
 			}
 			data->i2ccs = I2C_CH_NORMAL;
 		} else if (IT8XXX2_SMB_HOSTA(base) & HOSTA_BDS) {
-			if (data->ridx < data->active_msg->len) {
+			if (data->ridx < data->msgs->len) {
 				/* To get received data. */
-				*(data->active_msg->buf++) = IT8XXX2_SMB_HOBDB(base);
+				*(data->msgs->buf++) = IT8XXX2_SMB_HOBDB(base);
 				data->ridx++;
 				/* For last byte */
 				i2c_r_last_byte(dev);
 				/* done */
-				if (data->ridx == data->active_msg->len) {
-					data->active_msg->len = 0;
-					if (data->active_msg->flags & I2C_MSG_STOP) {
+				if (data->ridx == data->msgs->len) {
+					data->msgs->len = 0;
+					if (data->msgs->flags & I2C_MSG_STOP) {
 						/* W/C for finish */
 						IT8XXX2_SMB_HOSTA(base) =
 						HOSTA_NEXT_BYTE;
@@ -810,7 +799,7 @@ int __soc_ram_code i2c_tran_write(const struct device *dev)
 	const struct i2c_it8xxx2_config *config = dev->config;
 	uint8_t *base = config->base;
 
-	if (data->active_msg->flags & I2C_MSG_START) {
+	if (data->msgs->flags & I2C_MSG_START) {
 		/* i2c enable */
 		IT8XXX2_SMB_HOCTL2(base) = IT8XXX2_SMB_SMD_TO_EN |
 					   IT8XXX2_SMB_I2C_EN |
@@ -821,11 +810,11 @@ int __soc_ram_code i2c_tran_write(const struct device *dev)
 		 */
 		IT8XXX2_SMB_TRASLA(base) = (uint8_t)data->addr_16bit << 1;
 		/* Send first byte */
-		IT8XXX2_SMB_HOBDB(base) = *(data->active_msg->buf++);
+		IT8XXX2_SMB_HOBDB(base) = *(data->msgs->buf++);
 
 		data->widx++;
 		/* clear start flag */
-		data->active_msg->flags &= ~I2C_MSG_START;
+		data->msgs->flags &= ~I2C_MSG_START;
 		/*
 		 * bit0, Host interrupt enable.
 		 * bit[2:4}, Extend command.
@@ -837,9 +826,9 @@ int __soc_ram_code i2c_tran_write(const struct device *dev)
 	} else {
 		/* Host has completed the transmission of a byte */
 		if (IT8XXX2_SMB_HOSTA(base) & HOSTA_BDS) {
-			if (data->widx < data->active_msg->len) {
+			if (data->widx < data->msgs->len) {
 				/* Send next byte */
-				IT8XXX2_SMB_HOBDB(base) = *(data->active_msg->buf++);
+				IT8XXX2_SMB_HOBDB(base) = *(data->msgs->buf++);
 
 				data->widx++;
 				/* W/C byte done for next byte */
@@ -850,8 +839,8 @@ int __soc_ram_code i2c_tran_write(const struct device *dev)
 				}
 			} else {
 				/* done */
-				data->active_msg->len = 0;
-				if (data->active_msg->flags & I2C_MSG_STOP) {
+				data->msgs->len = 0;
+				if (data->msgs->flags & I2C_MSG_STOP) {
 					/* set I2C_EN = 0 */
 					IT8XXX2_SMB_HOCTL2(base) = IT8XXX2_SMB_SMD_TO_EN |
 								   IT8XXX2_SMB_SMHEN;
@@ -887,7 +876,7 @@ int __soc_ram_code i2c_pio_transaction(const struct device *dev)
 			 * it means that the interrupt cannot be disable and
 			 * continue to transmit data.
 			 */
-			if (data->active_msg->flags & I2C_MSG_READ) {
+			if (data->msgs->flags & I2C_MSG_READ) {
 				return i2c_tran_read(dev);
 			} else {
 				return i2c_tran_write(dev);
@@ -923,8 +912,6 @@ static int i2c_it8xxx2_transfer(const struct device *dev, struct i2c_msg *msgs,
 	 * exclude checking bus busy.
 	 */
 	if (data->i2ccs == I2C_CH_NORMAL) {
-		struct i2c_msg *start_msg = &msgs[0];
-
 		/* Make sure we're in a good state to start */
 		if (i2c_bus_not_available(dev)) {
 			/* Recovery I2C bus */
@@ -940,7 +927,7 @@ static int i2c_it8xxx2_transfer(const struct device *dev, struct i2c_msg *msgs,
 			}
 		}
 
-		start_msg->flags |= I2C_MSG_START;
+		msgs->flags |= I2C_MSG_START;
 	}
 #ifdef CONFIG_I2C_IT8XXX2_FIFO_MODE
 	/* Store num_msgs to data struct. */
@@ -959,9 +946,12 @@ static int i2c_it8xxx2_transfer(const struct device *dev, struct i2c_msg *msgs,
 		data->widx = 0;
 		data->ridx = 0;
 		data->err = 0;
-		data->active_msg = &msgs[i];
+		data->msgs = &(msgs[i]);
 		data->addr_16bit = addr;
 
+		if (msgs->flags & I2C_MSG_START) {
+			data->i2ccs = I2C_CH_NORMAL;
+		}
 #ifdef CONFIG_I2C_IT8XXX2_FIFO_MODE
 		data->active_msg_index = 0;
 		/*
@@ -1035,7 +1025,7 @@ static int i2c_it8xxx2_transfer(const struct device *dev, struct i2c_msg *msgs,
 	}
 #endif
 	/* reset i2c channel status */
-	if (data->err || (data->active_msg->flags & I2C_MSG_STOP)) {
+	if (data->err || (msgs->flags & I2C_MSG_STOP)) {
 		data->i2ccs = I2C_CH_NORMAL;
 	}
 	/* Unlock mutex of i2c controller */
@@ -1053,7 +1043,8 @@ static void i2c_it8xxx2_isr(const struct device *dev)
 	volatile uint8_t *reg_mstfctrl = config->reg_mstfctrl;
 
 	/* If done doing work, wake up the task waiting for the transfer. */
-	if (config->fifo_enable && (*reg_mstfctrl & IT8XXX2_SMB_FFEN)) {
+	if ((reg_mstfctrl != NULL) &&
+	    (*reg_mstfctrl & IT8XXX2_SMB_FFEN)) {
 		if (i2c_fifo_transaction(dev)) {
 			return;
 		}
@@ -1117,13 +1108,8 @@ static int i2c_it8xxx2_init(const struct device *dev)
 #ifdef CONFIG_I2C_IT8XXX2_FIFO_MODE
 	volatile uint8_t *reg_mstfctrl = config->reg_mstfctrl;
 
-	if (config->port == SMB_CHANNEL_B && config->fifo_enable) {
-		/* Select channel B in FIFO2. */
-		*reg_mstfctrl = IT8XXX2_SMB_FFCHSEL2_B;
-	} else if (config->port == SMB_CHANNEL_C && config->fifo_enable) {
-		/* Select channel C in FIFO2. */
-		*reg_mstfctrl = IT8XXX2_SMB_FFCHSEL2_C;
-	}
+	/* Select channel C in FIFO 2. */
+	*reg_mstfctrl = IT8XXX2_SMB_FFCHSEL2_C;
 #endif
 
 	/* Set clock frequency for I2C ports */
@@ -1223,14 +1209,6 @@ static const struct i2c_driver_api i2c_it8xxx2_driver_api = {
 	.recover_bus = i2c_it8xxx2_recover_bus,
 };
 
-#ifdef CONFIG_I2C_IT8XXX2_FIFO_MODE
-BUILD_ASSERT(((DT_INST_PROP(SMB_CHANNEL_B, fifo_enable) == true) &&
-	     (DT_INST_PROP(SMB_CHANNEL_C, fifo_enable) == false)) ||
-	     ((DT_INST_PROP(SMB_CHANNEL_B, fifo_enable) == false) &&
-	     (DT_INST_PROP(SMB_CHANNEL_C, fifo_enable) == true)),
-	     "FIFO2 only supports one channel of B or C.");
-#endif
-
 #define I2C_ITE_IT8XXX2_INIT(inst)                                              \
 	PINCTRL_DT_INST_DEFINE(inst);                                           \
 	BUILD_ASSERT((DT_INST_PROP(inst, clock_frequency) ==                    \
@@ -1254,7 +1232,6 @@ BUILD_ASSERT(((DT_INST_PROP(SMB_CHANNEL_B, fifo_enable) == true) &&
 		.sda_gpios = GPIO_DT_SPEC_INST_GET(inst, sda_gpios),            \
 		.clock_gate_offset = DT_INST_PROP(inst, clock_gate_offset),     \
 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(inst),                   \
-		.fifo_enable = DT_INST_PROP(inst, fifo_enable),                 \
 	};                                                                      \
 										\
 	static struct i2c_it8xxx2_data i2c_it8xxx2_data_##inst;                 \

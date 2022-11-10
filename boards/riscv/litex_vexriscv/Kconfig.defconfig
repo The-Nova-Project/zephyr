@@ -6,6 +6,9 @@ if BOARD_LITEX_VEXRISCV
 config BOARD
 	default "litex_vexriscv"
 
+config BUILD_OUTPUT_HEX
+	default y
+
 if NETWORKING
 
 config NET_L2_ETHERNET

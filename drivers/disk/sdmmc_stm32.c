@@ -13,7 +13,6 @@
 #include <zephyr/drivers/pinctrl.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/irq.h>
 #include <soc.h>
 #include <stm32_ll_rcc.h>
 
@@ -47,7 +46,7 @@ typedef void (*irq_config_func_t)(const struct device *dev);
 
 #if STM32_SDMMC_USE_DMA
 
-static const uint32_t table_priority[] = {
+uint32_t table_priority[] = {
 	DMA_PRIORITY_LOW,
 	DMA_PRIORITY_MEDIUM,
 	DMA_PRIORITY_HIGH,

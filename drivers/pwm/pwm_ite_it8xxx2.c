@@ -281,7 +281,7 @@ static const struct pwm_driver_api pwm_it8xxx2_api = {
 			      NULL,							\
 			      &pwm_it8xxx2_cfg_##inst,					\
 			      PRE_KERNEL_1,						\
-			      CONFIG_PWM_INIT_PRIORITY,					\
+			      CONFIG_KERNEL_INIT_PRIORITY_DEVICE,			\
 			      &pwm_it8xxx2_api);
 
 DT_INST_FOREACH_STATUS_OKAY(PWM_IT8XXX2_INIT)

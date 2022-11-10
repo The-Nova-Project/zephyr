@@ -11,7 +11,7 @@ source "subsys/logging/Kconfig.template.log_config"
 
 config MULTITHREADING
 	bool "Multi-threading" if ARCH_HAS_SINGLE_THREAD_SUPPORT
-	default y
+	default n
 	help
 	  If disabled, only the main thread is available, so a main() function
 	  must be provided. Interrupts are available. Kernel objects will most
@@ -136,22 +136,6 @@ config SCHED_CPU_MASK
 	  CPU.  With one CPU, it's just a higher overhead version of
 	  k_thread_start/stop().
 
-config SCHED_CPU_MASK_PIN_ONLY
-	bool "CPU mask variant with single-CPU pinning only"
-	depends on SMP && SCHED_CPU_MASK
-	help
-	  When true, enables a variant of SCHED_CPU_MASK where only
-	  one CPU may be specified for every thread.  Effectively, all
-	  threads have a single "assigned" CPU and they will never be
-	  scheduled symmetrically.  In general this is not helpful,
-	  but some applications have a carefully designed threading
-	  architecture and want to make their own decisions about how
-	  to assign work to CPUs.  In that circumstance, some moderate
-	  optimizations can be made (e.g. having a separate run queue
-	  per CPU, keeping the list length shorter). When selected,
-	  the CPU mask becomes an immutable thread attribute. It can
-	  only be modified before a thread is started.  Most
-	  applications don't want this.
 
 config MAIN_STACK_SIZE
 	int "Size of stack for initialization and main thread"
@@ -202,7 +186,7 @@ config THREAD_CUSTOM_DATA
 config THREAD_USERSPACE_LOCAL_DATA
 	bool
 	depends on USERSPACE
-	default y if ERRNO && !ERRNO_IN_TLS
+	default n if ERRNO && !ERRNO_IN_TLS
 
 config LIBC_ERRNO
 	bool
@@ -212,7 +196,7 @@ config LIBC_ERRNO
 
 config ERRNO
 	bool "Errno support"
-	default y
+	default n
 	help
 	  Enable per-thread errno in the kernel. Application and library code must
 	  include errno.h provided by the C library (libc) to use the errno
@@ -222,7 +206,7 @@ config ERRNO
 config ERRNO_IN_TLS
 	bool "Store errno in thread local storage (TLS)"
 	depends on ERRNO && THREAD_LOCAL_STORAGE && !LIBC_ERRNO
-	default y
+	default n
 	help
 	  Use thread local storage to store errno instead of storing it in
 	  the kernel thread struct. This avoids a syscall if userspace is enabled.
@@ -480,7 +464,7 @@ menu "Timer API Options"
 
 config TIMESLICING
 	bool "Thread time slicing"
-	default y
+	default n
 	depends on SYS_CLOCK_EXISTS && (NUM_PREEMPT_PRIORITIES != 0)
 	help
 	  This option enables time slicing between preemptible threads of
@@ -563,7 +547,7 @@ config PIPES
 
 config KERNEL_MEM_POOL
 	bool "Use Kernel Memory Pool"
-	default y
+	default n
 	help
 	  Enable the use of kernel memory pool.
 
@@ -648,7 +632,7 @@ config SYS_CLOCK_HW_CYCLES_PER_SEC
 
 config SYS_CLOCK_EXISTS
 	bool "System clock exists and is enabled"
-	default y
+	default n
 	help
 	  This option specifies that the kernel has timer support.
 
@@ -658,7 +642,7 @@ config SYS_CLOCK_EXISTS
 
 config TIMEOUT_64BIT
 	bool "Store kernel timeouts in 64 bit precision"
-	default y
+	default n
 	help
 	  When this option is true, the k_ticks_t values passed to
 	  kernel APIs will be a 64 bit quantity, allowing the use of
@@ -744,7 +728,7 @@ config EXECUTE_XOR_WRITE
 	bool "W^X for memory partitions"
 	depends on USERSPACE
 	depends on ARCH_HAS_EXECUTABLE_PAGE_BIT
-	default y
+	default n
 	help
 	  When enabled, will enforce that a writable page isn't executable
 	  and vice versa.  This might not be acceptable in all scenarios,
@@ -873,18 +857,10 @@ config SMP_BOOT_DELAY
 
 config MP_NUM_CPUS
 	int "Number of CPUs/cores"
-	default MP_MAX_NUM_CPUS
-	range 1 4
-	help
-	  Number of multiprocessing-capable cores available to the
-	  multicpu API and SMP features.
-
-config MP_MAX_NUM_CPUS
-	int "Maximum number of CPUs/cores"
 	default 1
 	range 1 4
 	help
-	  Maximum number of multiprocessing-capable cores available to the
+	  Number of multiprocessing-capable cores available to the
 	  multicpu API and SMP features.
 
 config SCHED_IPI_SUPPORTED
@@ -929,7 +905,7 @@ endmenu
 
 config TICKLESS_KERNEL
 	bool "Tickless kernel"
-	default y if TICKLESS_CAPABLE
+	default n if TICKLESS_CAPABLE
 	depends on TICKLESS_CAPABLE
 	help
 	  This option enables a fully event driven kernel. Periodic system

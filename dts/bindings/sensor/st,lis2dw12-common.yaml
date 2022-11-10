@@ -1,8 +1,6 @@
 # Copyright (c) 2021 STMicroelectronics
 # SPDX-License-Identifier: Apache-2.0
 
-include: sensor-device.yaml
-
 properties:
     irq-gpios:
       type: phandle-array
@@ -161,6 +159,7 @@ properties:
 
     low-noise:
       type: boolean
+      required: false
       description: |
         Enables the LOW_NOISE flag in the CTRL6 register.
         This influences the noise density and the current consumption.
@@ -168,6 +167,7 @@ properties:
 
     hp-filter-path:
       type: boolean
+      required: false
       description: |
         Sets the Filtered Data Selection bit in the CTRL6 register.
         When enabled, the high-pass filter path is selected.
@@ -177,6 +177,7 @@ properties:
 
     hp-ref-mode:
       type: boolean
+      required: false
       description: |
         Enables the high-pass filter reference mode in the CTRL7 register.
         When the high-pass filter is configured in reference mode,
@@ -189,6 +190,7 @@ properties:
 
     drdy-pulsed:
       type: boolean
+      required: false
       description: |
         Selects the pulsed mode for data-ready interrupt when enabled,
         and the latched mode when disabled.

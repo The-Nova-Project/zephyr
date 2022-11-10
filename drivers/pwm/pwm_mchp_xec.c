@@ -425,7 +425,7 @@ static int pwm_xec_init(const struct device *dev)
 			      NULL,					\
 			      NULL,					\
 			      &pwm_xec_config_##index, POST_KERNEL,	\
-			      CONFIG_PWM_INIT_PRIORITY,			\
+			      CONFIG_KERNEL_INIT_PRIORITY_DEVICE,	\
 			      &pwm_xec_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(XEC_PWM_DEVICE_INIT)

@@ -8,32 +8,15 @@
 #include <zephyr/sys/check.h>
 
 #include <soc.h>
-#include <adsp_boot.h>
-#include <adsp_power.h>
+#include <ace_v1x-regs.h>
 #include <adsp_ipc_regs.h>
 #include <adsp_memory.h>
-#include <adsp_interrupt.h>
-#include <zephyr/irq.h>
 
 #define CORE_POWER_CHECK_NUM 32
-#define ACE_INTC_IRQ DT_IRQN(DT_NODELABEL(ace_intc))
 
 static void ipc_isr(void *arg)
 {
-	uint32_t cpu_id = arch_proc_id();
-
-	/*
-	 * Clearing the BUSY bits in both TDR and TDA are needed to
-	 * complete an IDC message. If we do only one (and not both),
-	 * the other side will not be able to send another IDC
-	 * message as the hardware still thinks you are processing
-	 * the IDC message (and thus will not send another one).
-	 * On TDR, it is to write one to clear, while on TDA, it is
-	 * to write zero to clear.
-	 */
-	IDC[cpu_id].agents[0].ipc.tdr = BIT(31);
-	IDC[cpu_id].agents[0].ipc.tda = 0;
-
+	IDC[arch_proc_id()].agents[0].ipc.tdr = BIT(31); /* clear BUSY bit */
 #ifdef CONFIG_SMP
 	void z_sched_ipi(void);
 	z_sched_ipi();
@@ -42,15 +25,13 @@ static void ipc_isr(void *arg)
 
 void soc_mp_init(void)
 {
-	IRQ_CONNECT(ACE_IRQ_TO_ZEPHYR(ACE_INTL_IDCA), 0, ipc_isr, 0, 0);
+	IRQ_CONNECT(MTL_IRQ_TO_ZEPHYR(MTL_INTL_IDCA), 0, ipc_isr, 0, 0);
 
-	irq_enable(ACE_IRQ_TO_ZEPHYR(ACE_INTL_IDCA));
+	irq_enable(MTL_IRQ_TO_ZEPHYR(MTL_INTL_IDCA));
 
-	unsigned int num_cpus = arch_num_cpus();
-
-	for (int i = 0; i < num_cpus; i++) {
+	for (int i = 0; i < CONFIG_MP_NUM_CPUS; i++) {
 		/* DINT has one bit per IPC, unmask only IPC "Ax" on core "x" */
-		ACE_DINT[i].ie[ACE_INTL_IDCA] = BIT(i);
+		MTL_DINT[i].ie[MTL_INTL_IDCA] = BIT(i);
 
 		/* Agent A should signal only BUSY interrupts */
 		IDC[i].agents[0].ipc.ctl = BIT(0); /* IPCTBIE */
@@ -82,13 +63,11 @@ void soc_start_core(int cpu_num)
 	DFDSPBRCP.capctl[cpu_num].ctl |= DFDSPBRCP_CTL_SPA;
 
 	/* Waiting for power up */
-	while (((DFDSPBRCP.capctl[cpu_num].ctl & DFDSPBRCP_CTL_CPA) != DFDSPBRCP_CTL_CPA) &&
-	       (retry > 0)) {
+	while (~(DFDSPBRCP.capctl[cpu_num].ctl & DFDSPBRCP_CTL_CPA) && --retry) {
 		k_busy_wait(HW_STATE_CHECK_DELAY);
-		retry--;
 	}
 
-	if (retry == 0) {
+	if (!retry) {
 		__ASSERT(false, "%s secondary core has not powered up", __func__);
 	}
 }
@@ -113,9 +92,7 @@ void arch_sched_ipi(void)
 	uint32_t curr = arch_proc_id();
 
 	/* Signal agent B[n] to cause an interrupt from agent A[n] */
-	unsigned int num_cpus = arch_num_cpus();
-
-	for (int core = 0; core < num_cpus; core++) {
+	for (int core = 0; core < CONFIG_MP_NUM_CPUS; core++) {
 		if (core != curr && soc_cpus_active[core]) {
 			IDC[core].agents[1].ipc.idr = INTEL_ADSP_IPC_BUSY;
 		}
@@ -130,30 +107,24 @@ int soc_adsp_halt_cpu(int id)
 		return -EINVAL;
 	}
 
-	CHECKIF(id <= 0 || id >= arch_num_cpus()) {
+	CHECKIF(id <= 0 || id >= CONFIG_MP_NUM_CPUS) {
 		return -EINVAL;
 	}
 
-	CHECKIF(!soc_cpus_active[id]) {
+	CHECKIF(soc_cpus_active[id]) {
 		return -EINVAL;
 	}
 
 	DFDSPBRCP.capctl[id].ctl &= ~DFDSPBRCP_CTL_SPA;
 
 	/* Waiting for power off */
-	while (((DFDSPBRCP.capctl[id].ctl & DFDSPBRCP_CTL_CPA) == DFDSPBRCP_CTL_CPA) &&
-	       (retry > 0)) {
+	while (DFDSPBRCP.capctl[id].ctl & DFDSPBRCP_CTL_CPA && --retry)
 		k_busy_wait(HW_STATE_CHECK_DELAY);
-		retry--;
-	}
 
-	if (retry == 0) {
+	if (!retry) {
 		__ASSERT(false, "%s secondary core has not powered down", __func__);
 		return -EINVAL;
 	}
-
-	/* Stop sending IPIs to this core */
-	soc_cpus_active[id] = false;
 
 	return 0;
 }

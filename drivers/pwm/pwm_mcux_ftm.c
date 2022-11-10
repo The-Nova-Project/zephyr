@@ -10,7 +10,6 @@
 #include <zephyr/drivers/clock_control.h>
 #include <errno.h>
 #include <zephyr/drivers/pwm.h>
-#include <zephyr/irq.h>
 #include <soc.h>
 #include <fsl_ftm.h>
 #include <fsl_clock.h>
@@ -494,7 +493,7 @@ static const struct mcux_ftm_config mcux_ftm_config_##n = { \
 	DEVICE_DT_INST_DEFINE(n, &mcux_ftm_init,		       \
 			    NULL, &mcux_ftm_data_##n, \
 			    &mcux_ftm_config_##n, \
-			    POST_KERNEL, CONFIG_PWM_INIT_PRIORITY, \
+			    POST_KERNEL, CONFIG_KERNEL_INIT_PRIORITY_DEVICE, \
 			    &mcux_ftm_driver_api); \
 	FTM_CONFIG_FUNC(n) \
 	FTM_INIT_CFG(n);

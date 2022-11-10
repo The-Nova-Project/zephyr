@@ -8,7 +8,6 @@
 
 #include <string.h>
 #include <zephyr/drivers/spi.h>
-#include <zephyr/kernel.h>
 #include <zephyr/sys/byteorder.h>
 #include "ms5607.h"
 

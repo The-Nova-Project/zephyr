@@ -14,7 +14,6 @@
 #include <zephyr/storage/stream_flash.h>
 
 #ifdef CONFIG_IMG_ERASE_PROGRESSIVELY
-#include <bootutil/bootutil_public.h>
 #include <zephyr/dfu/mcuboot.h>
 #endif
 

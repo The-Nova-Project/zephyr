@@ -11,7 +11,6 @@
 #include <zephyr/drivers/clock_control.h>
 #include <fsl_lpspi.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/irq.h>
 #ifdef CONFIG_SPI_MCUX_LPSPI_DMA
 #include <zephyr/drivers/dma.h>
 #endif

@@ -6,7 +6,6 @@
 
 #include <zephyr/ztest.h>
 #include <zephyr/storage/flash_map.h>
-#include <bootutil/bootutil_public.h>
 #include <zephyr/dfu/mcuboot.h>
 
 #define SLOT0_PARTITION		slot0_partition

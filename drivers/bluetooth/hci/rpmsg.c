@@ -196,7 +196,7 @@ static void bt_rpmsg_rx(const uint8_t *data, size_t len)
 	struct net_buf *buf = NULL;
 	size_t remaining = len;
 
-	LOG_HEXDUMP_DBG(data, len, "RPMsg data:");
+	BT_HEXDUMP_DBG(data, len, "RPMsg data:");
 
 	pkt_indicator = *data++;
 	remaining -= sizeof(pkt_indicator);
@@ -224,7 +224,7 @@ static void bt_rpmsg_rx(const uint8_t *data, size_t len)
 
 		bt_recv(buf);
 
-		LOG_HEXDUMP_DBG(buf->data, buf->len, "RX buf payload:");
+		BT_HEXDUMP_DBG(buf->data, buf->len, "RX buf payload:");
 	}
 }
 
@@ -251,7 +251,7 @@ static int bt_rpmsg_send(struct net_buf *buf)
 	}
 	net_buf_push_u8(buf, pkt_indicator);
 
-	LOG_HEXDUMP_DBG(buf->data, buf->len, "Final HCI buffer:");
+	BT_HEXDUMP_DBG(buf->data, buf->len, "Final HCI buffer:");
 	err = ipc_service_send(&hci_ept, buf->data, buf->len);
 	if (err < 0) {
 		BT_ERR("Failed to send (err %d)", err);

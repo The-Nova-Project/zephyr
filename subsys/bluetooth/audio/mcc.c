@@ -174,7 +174,7 @@ static uint8_t mcc_read_player_name_cb(struct bt_conn *conn, uint8_t err,
 	} else if (!data) {
 		cb_err = BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
 	} else {
-		LOG_HEXDUMP_DBG(data, length, "Player name read");
+		BT_HEXDUMP_DBG(data, length, "Player name read");
 
 		if (length >= sizeof(name)) {
 			length = sizeof(name) - 1;
@@ -209,7 +209,7 @@ static uint8_t mcc_read_icon_obj_id_cb(struct bt_conn *conn, uint8_t err,
 	} else if ((!pid) || (length != BT_OTS_OBJ_ID_SIZE)) {
 		cb_err = BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
 	} else {
-		LOG_HEXDUMP_DBG(pid, length, "Icon Object ID");
+		BT_HEXDUMP_DBG(pid, length, "Icon Object ID");
 		id = sys_get_le48(pid);
 		BT_DBG_OBJ_ID("Icon Object ID: ", id);
 	}
@@ -238,7 +238,7 @@ static uint8_t mcc_read_icon_url_cb(struct bt_conn *conn, uint8_t err,
 	} else if (length >= sizeof(url)) {
 		cb_err = BT_ATT_ERR_INSUFFICIENT_RESOURCES;
 	} else {
-		LOG_HEXDUMP_DBG(data, length, "Icon URL");
+		BT_HEXDUMP_DBG(data, length, "Icon URL");
 		(void)memcpy(&url, data, length);
 		url[length] = '\0';
 		BT_DBG("Icon URL: %s", url);
@@ -264,7 +264,7 @@ static uint8_t mcc_read_track_title_cb(struct bt_conn *conn, uint8_t err,
 	} else if (!data) {
 		cb_err = BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
 	} else {
-		LOG_HEXDUMP_DBG(data, length, "Track title");
+		BT_HEXDUMP_DBG(data, length, "Track title");
 		if (length >= sizeof(title)) {
 			/* If the description is too long; clip it. */
 			length = sizeof(title) - 1;
@@ -297,7 +297,7 @@ static uint8_t mcc_read_track_duration_cb(struct bt_conn *conn, uint8_t err,
 	} else {
 		dur = sys_get_le32((uint8_t *)data);
 		BT_DBG("Track duration: %d", dur);
-		LOG_HEXDUMP_DBG(data, sizeof(int32_t), "Track duration");
+		BT_HEXDUMP_DBG(data, sizeof(int32_t), "Track duration");
 	}
 
 	if (mcc_cb && mcc_cb->read_track_duration) {
@@ -323,7 +323,7 @@ static uint8_t mcc_read_track_position_cb(struct bt_conn *conn, uint8_t err,
 	} else  {
 		pos = sys_get_le32((uint8_t *)data);
 		BT_DBG("Track position: %d", pos);
-		LOG_HEXDUMP_DBG(data, sizeof(pos), "Track position");
+		BT_HEXDUMP_DBG(data, sizeof(pos), "Track position");
 	}
 
 	if (mcc_cb && mcc_cb->read_track_position) {
@@ -348,7 +348,8 @@ static void mcs_write_track_position_cb(struct bt_conn *conn, uint8_t err,
 	} else {
 		pos = sys_get_le32((uint8_t *)params->data);
 		BT_DBG("Track position: %d", pos);
-		LOG_HEXDUMP_DBG(params->data, sizeof(pos), "Track position in callback");
+		BT_HEXDUMP_DBG(params->data, sizeof(pos),
+			       "Track position in callback");
 	}
 
 	if (mcc_cb && mcc_cb->set_track_position) {
@@ -372,7 +373,7 @@ static uint8_t mcc_read_playback_speed_cb(struct bt_conn *conn, uint8_t err,
 	} else {
 		speed = *(int8_t *)data;
 		BT_DBG("Playback speed: %d", speed);
-		LOG_HEXDUMP_DBG(data, sizeof(int8_t), "Playback speed");
+		BT_HEXDUMP_DBG(data, sizeof(int8_t), "Playback speed");
 	}
 
 	if (mcc_cb && mcc_cb->read_playback_speed) {
@@ -420,7 +421,7 @@ static uint8_t mcc_read_seeking_speed_cb(struct bt_conn *conn, uint8_t err,
 	} else {
 		speed = *(int8_t *)data;
 		BT_DBG("Seeking speed: %d", speed);
-		LOG_HEXDUMP_DBG(data, sizeof(int8_t), "Seeking speed");
+		BT_HEXDUMP_DBG(data, sizeof(int8_t), "Seeking speed");
 	}
 
 	if (mcc_cb && mcc_cb->read_seeking_speed) {
@@ -447,7 +448,7 @@ static uint8_t mcc_read_segments_obj_id_cb(struct bt_conn *conn, uint8_t err,
 		BT_DBG("length: %d, data: %p", length, data);
 		cb_err = BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
 	} else {
-		LOG_HEXDUMP_DBG(pid, length, "Segments Object ID");
+		BT_HEXDUMP_DBG(pid, length, "Segments Object ID");
 		id = sys_get_le48(pid);
 		BT_DBG_OBJ_ID("Segments Object ID: ", id);
 		cb_err = 0;
@@ -476,7 +477,7 @@ static uint8_t mcc_read_current_track_obj_id_cb(struct bt_conn *conn, uint8_t er
 		BT_DBG("length: %d, data: %p", length, data);
 		cb_err = BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
 	} else {
-		LOG_HEXDUMP_DBG(pid, length, "Current Track Object ID");
+		BT_HEXDUMP_DBG(pid, length, "Current Track Object ID");
 		id = sys_get_le48(pid);
 		BT_DBG_OBJ_ID("Current Track Object ID: ", id);
 		cb_err = 0;
@@ -528,7 +529,7 @@ static uint8_t mcc_read_next_track_obj_id_cb(struct bt_conn *conn, uint8_t err,
 		BT_DBG("length: %d, data: %p", length, data);
 		cb_err = BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
 	} else {
-		LOG_HEXDUMP_DBG(pid, length, "Next Track Object ID");
+		BT_HEXDUMP_DBG(pid, length, "Next Track Object ID");
 		id = sys_get_le48(pid);
 		BT_DBG_OBJ_ID("Next Track Object ID: ", id);
 	}
@@ -577,7 +578,7 @@ static uint8_t mcc_read_parent_group_obj_id_cb(struct bt_conn *conn, uint8_t err
 		BT_DBG("length: %d, data: %p", length, data);
 		cb_err = BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
 	} else {
-		LOG_HEXDUMP_DBG(pid, length, "Parent Group Object ID");
+		BT_HEXDUMP_DBG(pid, length, "Parent Group Object ID");
 		id = sys_get_le48(pid);
 		BT_DBG_OBJ_ID("Parent Group Object ID: ", id);
 	}
@@ -604,7 +605,7 @@ static uint8_t mcc_read_current_group_obj_id_cb(struct bt_conn *conn, uint8_t er
 		BT_DBG("length: %d, data: %p", length, data);
 		cb_err = BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
 	} else {
-		LOG_HEXDUMP_DBG(pid, length, "Current Group Object ID");
+		BT_HEXDUMP_DBG(pid, length, "Current Group Object ID");
 		id = sys_get_le48(pid);
 		BT_DBG_OBJ_ID("Current Group Object ID: ", id);
 	}
@@ -655,7 +656,7 @@ static uint8_t mcc_read_playing_order_cb(struct bt_conn *conn, uint8_t err,
 	} else {
 		order = *(uint8_t *)data;
 		BT_DBG("Playing order: %d", order);
-		LOG_HEXDUMP_DBG(data, sizeof(order), "Playing order");
+		BT_HEXDUMP_DBG(data, sizeof(order), "Playing order");
 	}
 
 	if (mcc_cb && mcc_cb->read_playing_order) {
@@ -703,7 +704,7 @@ static uint8_t mcc_read_playing_orders_supported_cb(struct bt_conn *conn, uint8_
 	} else {
 		orders = sys_get_le16((uint8_t *)data);
 		BT_DBG("Playing orders_supported: %d", orders);
-		LOG_HEXDUMP_DBG(data, sizeof(orders), "Playing orders supported");
+		BT_HEXDUMP_DBG(data, sizeof(orders), "Playing orders supported");
 	}
 
 	if (mcc_cb && mcc_cb->read_playing_orders_supported) {
@@ -729,7 +730,7 @@ static uint8_t mcc_read_media_state_cb(struct bt_conn *conn, uint8_t err,
 	} else {
 		state = *(uint8_t *)data;
 		BT_DBG("Media state: %d", state);
-		LOG_HEXDUMP_DBG(data, sizeof(uint8_t), "Media state");
+		BT_HEXDUMP_DBG(data, sizeof(uint8_t), "Media state");
 	}
 
 	if (mcc_cb && mcc_cb->read_media_state) {
@@ -790,7 +791,7 @@ static uint8_t mcc_read_opcodes_supported_cb(struct bt_conn *conn, uint8_t err,
 	} else {
 		operations = sys_get_le32((uint8_t *)data);
 		BT_DBG("Opcodes supported: %d", operations);
-		LOG_HEXDUMP_DBG(data, sizeof(operations), "Opcodes_supported");
+		BT_HEXDUMP_DBG(data, sizeof(operations), "Opcodes_supported");
 	}
 
 	if (mcc_cb && mcc_cb->read_opcodes_supported) {
@@ -1990,7 +1991,8 @@ int bt_mcc_set_track_position(struct bt_conn *conn, int32_t pos)
 	cur_mcs_inst->write_params.handle = cur_mcs_inst->track_position_handle;
 	cur_mcs_inst->write_params.func = mcs_write_track_position_cb;
 
-	LOG_HEXDUMP_DBG(cur_mcs_inst->write_params.data, sizeof(pos), "Track position sent");
+	BT_HEXDUMP_DBG(cur_mcs_inst->write_params.data, sizeof(pos),
+		       "Track position sent");
 
 	err = bt_gatt_write(conn, &cur_mcs_inst->write_params);
 	if (!err) {
@@ -2049,7 +2051,8 @@ int bt_mcc_set_playback_speed(struct bt_conn *conn, int8_t speed)
 	cur_mcs_inst->write_params.handle = cur_mcs_inst->playback_speed_handle;
 	cur_mcs_inst->write_params.func = mcs_write_playback_speed_cb;
 
-	LOG_HEXDUMP_DBG(cur_mcs_inst->write_params.data, sizeof(speed), "Playback speed");
+	BT_HEXDUMP_DBG(cur_mcs_inst->write_params.data, sizeof(speed),
+		       "Playback speed");
 
 	err = bt_gatt_write(conn, &cur_mcs_inst->write_params);
 	if (!err) {
@@ -2167,7 +2170,7 @@ int bt_mcc_set_current_track_obj_id(struct bt_conn *conn, uint64_t obj_id)
 	cur_mcs_inst->write_params.handle = cur_mcs_inst->current_track_obj_id_handle;
 	cur_mcs_inst->write_params.func = mcs_write_current_track_obj_id_cb;
 
-	LOG_HEXDUMP_DBG(cur_mcs_inst->write_params.data, BT_OTS_OBJ_ID_SIZE, "Object Id");
+	BT_HEXDUMP_DBG(cur_mcs_inst->write_params.data, BT_OTS_OBJ_ID_SIZE, "Object Id");
 
 	err = bt_gatt_write(conn, &cur_mcs_inst->write_params);
 	if (!err) {
@@ -2230,7 +2233,7 @@ int bt_mcc_set_next_track_obj_id(struct bt_conn *conn, uint64_t obj_id)
 	cur_mcs_inst->write_params.handle = cur_mcs_inst->next_track_obj_id_handle;
 	cur_mcs_inst->write_params.func = mcs_write_next_track_obj_id_cb;
 
-	LOG_HEXDUMP_DBG(cur_mcs_inst->write_params.data, BT_OTS_OBJ_ID_SIZE, "Object Id");
+	BT_HEXDUMP_DBG(cur_mcs_inst->write_params.data, BT_OTS_OBJ_ID_SIZE, "Object Id");
 
 	err = bt_gatt_write(conn, &cur_mcs_inst->write_params);
 	if (!err) {
@@ -2320,7 +2323,7 @@ int bt_mcc_set_current_group_obj_id(struct bt_conn *conn, uint64_t obj_id)
 	cur_mcs_inst->write_params.handle = cur_mcs_inst->current_group_obj_id_handle;
 	cur_mcs_inst->write_params.func = mcs_write_current_group_obj_id_cb;
 
-	LOG_HEXDUMP_DBG(cur_mcs_inst->write_params.data, BT_OTS_OBJ_ID_SIZE, "Object Id");
+	BT_HEXDUMP_DBG(cur_mcs_inst->write_params.data, BT_OTS_OBJ_ID_SIZE, "Object Id");
 
 	err = bt_gatt_write(conn, &cur_mcs_inst->write_params);
 	if (!err) {
@@ -2380,7 +2383,8 @@ int bt_mcc_set_playing_order(struct bt_conn *conn, uint8_t order)
 	cur_mcs_inst->write_params.handle = cur_mcs_inst->playing_order_handle;
 	cur_mcs_inst->write_params.func = mcs_write_playing_order_cb;
 
-	LOG_HEXDUMP_DBG(cur_mcs_inst->write_params.data, sizeof(order), "Playing order");
+	BT_HEXDUMP_DBG(cur_mcs_inst->write_params.data, sizeof(order),
+		       "Playing order");
 
 	err = bt_gatt_write(conn, &cur_mcs_inst->write_params);
 	if (!err) {
@@ -2472,7 +2476,8 @@ int bt_mcc_send_cmd(struct bt_conn *conn, const struct mpl_cmd *cmd)
 	cur_mcs_inst->write_params.handle = cur_mcs_inst->cp_handle;
 	cur_mcs_inst->write_params.func = mcs_write_cp_cb;
 
-	LOG_HEXDUMP_DBG(cur_mcs_inst->write_params.data, sizeof(*cmd), "Command sent");
+	BT_HEXDUMP_DBG(cur_mcs_inst->write_params.data, sizeof(*cmd),
+		       "Command sent");
 
 	err = bt_gatt_write(conn, &cur_mcs_inst->write_params);
 	if (!err) {
@@ -2532,7 +2537,8 @@ int bt_mcc_send_search(struct bt_conn *conn, const struct mpl_search *search)
 	cur_mcs_inst->write_params.handle = cur_mcs_inst->scp_handle;
 	cur_mcs_inst->write_params.func = mcs_write_scp_cb;
 
-	LOG_HEXDUMP_DBG(cur_mcs_inst->write_params.data, search->len, "Search sent");
+	BT_HEXDUMP_DBG(cur_mcs_inst->write_params.data, search->len,
+		       "Search sent");
 
 	err = bt_gatt_write(conn, &cur_mcs_inst->write_params);
 	if (!err) {
@@ -2626,7 +2632,7 @@ int on_icon_content(struct bt_ots_client *otc_inst, struct bt_conn *conn,
 	BT_DBG("Received Media Player Icon content, %i bytes at offset %i",
 		len, offset);
 
-	LOG_HEXDUMP_DBG(data_p, len, "Icon content");
+	BT_HEXDUMP_DBG(data_p, len, "Icon content");
 
 	if (len > net_buf_simple_tailroom(&otc_obj_buf)) {
 		BT_WARN("Can not fit whole object");
@@ -2755,7 +2761,7 @@ int on_current_track_content(struct bt_ots_client *otc_inst,
 	BT_DBG("Received Current Track content, %i bytes at offset %i",
 	       len, offset);
 
-	LOG_HEXDUMP_DBG(data_p, len, "Track content");
+	BT_HEXDUMP_DBG(data_p, len, "Track content");
 
 	if (len > net_buf_simple_tailroom(&otc_obj_buf)) {
 		BT_WARN("Can not fit whole object");
@@ -2787,7 +2793,7 @@ int on_next_track_content(struct bt_ots_client *otc_inst,
 	BT_DBG("Received Next Track content, %i bytes at offset %i",
 	       len, offset);
 
-	LOG_HEXDUMP_DBG(data_p, len, "Track content");
+	BT_HEXDUMP_DBG(data_p, len, "Track content");
 
 	if (len > net_buf_simple_tailroom(&otc_obj_buf)) {
 		BT_WARN("Can not fit whole object");
@@ -2846,7 +2852,7 @@ int on_parent_group_content(struct bt_ots_client *otc_inst,
 	BT_DBG("Received Parent Group content, %i bytes at offset %i",
 		len, offset);
 
-	LOG_HEXDUMP_DBG(data_p, len, "Group content");
+	BT_HEXDUMP_DBG(data_p, len, "Group content");
 
 	if (len > net_buf_simple_tailroom(&otc_obj_buf)) {
 		BT_WARN("Can not fit whole object");
@@ -2892,7 +2898,7 @@ int on_current_group_content(struct bt_ots_client *otc_inst,
 	BT_DBG("Received Current Group content, %i bytes at offset %i",
 		len, offset);
 
-	LOG_HEXDUMP_DBG(data_p, len, "Group content");
+	BT_HEXDUMP_DBG(data_p, len, "Group content");
 
 	if (len > net_buf_simple_tailroom(&otc_obj_buf)) {
 		BT_WARN("Can not fit whole object");

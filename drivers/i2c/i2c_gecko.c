@@ -8,7 +8,6 @@
 
 #include <errno.h>
 #include <zephyr/drivers/i2c.h>
-#include <zephyr/kernel.h>
 #include <zephyr/sys/util.h>
 #include <em_cmu.h>
 #include <em_i2c.h>

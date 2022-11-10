@@ -17,7 +17,6 @@
 
 #define LOG_LEVEL CONFIG_SPI_LOG_LEVEL
 #include <zephyr/logging/log.h>
-#include <zephyr/irq.h>
 LOG_MODULE_REGISTER(spi_pl022);
 
 #include "spi_context.h"
@@ -471,7 +470,6 @@ static void spi_pl022_xfer(const struct device *dev)
 	const void *txbuf = data->ctx.tx_buf;
 	void *rxbuf = data->ctx.rx_buf;
 	uint32_t txrx;
-	size_t fifo_cnt = 0;
 
 	data->tx_count = 0;
 	data->rx_count = 0;
@@ -485,8 +483,7 @@ static void spi_pl022_xfer(const struct device *dev)
 
 	while (data->rx_count < chunk_len || data->tx_count < chunk_len) {
 		/* Fill up fifo with available TX data */
-		while (SSP_TX_FIFO_NOT_FULL(cfg->reg) && data->tx_count < chunk_len &&
-		       fifo_cnt < SSP_FIFO_DEPTH) {
+		while (SSP_TX_FIFO_NOT_FULL(cfg->reg) && data->tx_count < chunk_len) {
 			/* Send 0 in the case of read only operation */
 			txrx = 0;
 
@@ -495,12 +492,8 @@ static void spi_pl022_xfer(const struct device *dev)
 			}
 			SSP_WRITE_REG(SSP_DR(cfg->reg), txrx);
 			data->tx_count++;
-			fifo_cnt++;
 		}
-		while (data->rx_count < chunk_len && fifo_cnt > 0) {
-			if (!SSP_RX_FIFO_NOT_EMPTY(cfg->reg))
-				continue;
-
+		while (SSP_RX_FIFO_NOT_EMPTY(cfg->reg) && data->rx_count < chunk_len) {
 			txrx = SSP_READ_REG(SSP_DR(cfg->reg));
 
 			/* Discard received data if rx buffer not assigned */
@@ -508,7 +501,6 @@ static void spi_pl022_xfer(const struct device *dev)
 				((uint8_t *)rxbuf)[data->rx_count] = (uint8_t)txrx;
 			}
 			data->rx_count++;
-			fifo_cnt--;
 		}
 	}
 }

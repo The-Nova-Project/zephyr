@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/sys/printk.h>
 #include <zephyr/storage/flash_map.h>
 
 #include "updatehub_firmware.h"

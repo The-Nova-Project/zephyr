@@ -1,8 +1,6 @@
 tests:
   peripheral.eeprom:
-    platform_allow: |
-      native_posix native_posix_64 qemu_x86
-      nucleo_l152re nucleo_l073rz
+    platform_allow: native_posix native_posix_64 qemu_x86
     tags: drivers userspace
   peripheral.eeprom.generic:
     build_only: true

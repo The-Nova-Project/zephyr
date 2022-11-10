@@ -19,7 +19,6 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #include <zephyr/kernel.h>
 #include <zephyr/cache.h>
 #include <zephyr/net/ethernet.h>
-#include <zephyr/irq.h>
 
 #include "eth_dwmac_priv.h"
 

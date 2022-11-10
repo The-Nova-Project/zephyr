@@ -15,7 +15,6 @@
 #include <zephyr/device.h>
 
 #include <zephyr/drivers/entropy.h>
-#include <zephyr/irq.h>
 
 #include "hal/swi.h"
 #include "hal/ccm.h"

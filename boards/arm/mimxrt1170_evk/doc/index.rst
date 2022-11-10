@@ -83,11 +83,8 @@ these references:
 Supported Features
 ==================
 
-NXP considers the MIMXRT1170-EVK as the superset board for the i.MX RT11xx
-family of MCUs.  This board is a focus for NXP's Full Platform Support for
-Zephyr, to better enable the entire RT11xx family.  NXP prioritizes enabling
-this board with new support for Zephyr features.  The mimxrt1170_evk board
-configuration supports the following hardware features:
+The mimxrt1170_evk board configuration supports the following hardware
+features:
 
 +-----------+------------+-------------------------------------+
 | Interface | Controller | Driver/Component                    |
@@ -239,17 +236,15 @@ however the :ref:`pyocd-debug-host-tools` do not yet support programming the
 external flashes on this board so you must reconfigure the board for one of the
 following debug probes instead.
 
-.. _Using J-Link RT1170:
-
-Using J-Link
+:ref:`jlink-external-debug-probe`
 ---------------------------------
 
 Install the :ref:`jlink-debug-host-tools` and make sure they are in your search
 path.
 
-There are two options: the onboard debug circuit can be updated with Segger
-J-Link firmware, or :ref:`jlink-external-debug-probe` can be attached to the
-EVK. See `Using J-Link with MIMXRT1160-EVK or MIMXRT1170-EVK`_ for more details.
+Attach a J-Link 20-pin connector to J1. Check that jumpers J6 and J7
+are **off** (they are on by default when boards ship from the factory) to
+ensure SWD signals are disconnected from the OpenSDA microcontroller.
 
 Configuring a Console
 =====================
@@ -322,6 +317,3 @@ should see the following message in the terminal:
 
 .. _i.MX RT1170 Reference Manual:
    https://www.nxp.com/webapp/Download?colCode=IMXRT1170RM
-
-.. _Using J-Link with MIMXRT1160-EVK or MIMXRT1170-EVK:
-   https://community.nxp.com/t5/i-MX-RT-Knowledge-Base/Using-J-Link-with-MIMXRT1160-EVK-or-MIMXRT1170-EVK/ta-p/1529760

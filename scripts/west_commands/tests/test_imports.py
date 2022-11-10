@@ -38,6 +38,5 @@ def test_runner_imports():
                     'spi_burn',
                     'stm32cubeprogrammer',
                     'stm32flash',
-                    'trace32',
                     'xtensa'))
     assert runner_names == expected

@@ -9,7 +9,6 @@
 
 #define LOG_LEVEL CONFIG_MBOX_LOG_LEVEL
 #include <zephyr/logging/log.h>
-#include <zephyr/irq.h>
 LOG_MODULE_REGISTER(mbox_nrfx_ipc);
 
 #define DT_DRV_COMPAT nordic_mbox_nrf_ipc

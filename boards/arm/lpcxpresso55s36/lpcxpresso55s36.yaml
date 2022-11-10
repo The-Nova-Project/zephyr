@@ -16,4 +16,3 @@ toolchain:
   - xtools
 supported:
   - gpio
-  - pwm

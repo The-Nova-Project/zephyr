@@ -512,9 +512,9 @@
 			status = "disabled";
 		};
 
-		lpuart12: uart@40c28000 {
+		lpuart12: uart@40098000 {
 			compatible = "nxp,kinetis-lpuart";
-			reg = <0x40c28000 0x4000>;
+			reg = <0x40098000 0x4000>;
 			interrupts = <31 0>;
 			clocks = <&ccm IMX_CCM_LPUART12_CLK 0x80 14>;
 			status = "disabled";
@@ -531,7 +531,6 @@
 				interrupts = <125 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 
@@ -541,7 +540,6 @@
 				interrupts = <126 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 
@@ -551,7 +549,6 @@
 				interrupts = <127 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 
@@ -561,7 +558,6 @@
 				interrupts = <128 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 		};
@@ -577,7 +573,6 @@
 				interrupts = <177 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 
@@ -587,7 +582,6 @@
 				interrupts = <178 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 
@@ -597,7 +591,6 @@
 				interrupts = <179 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 
@@ -607,7 +600,6 @@
 				interrupts = <180 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 		};
@@ -623,7 +615,6 @@
 				interrupts = <182 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 
@@ -633,7 +624,6 @@
 				interrupts = <183 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 
@@ -643,7 +633,6 @@
 				interrupts = <184 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 
@@ -653,7 +642,6 @@
 				interrupts = <185 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 		};
@@ -669,7 +657,6 @@
 				interrupts = <187 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 
@@ -679,7 +666,6 @@
 				interrupts = <188 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 
@@ -689,7 +675,6 @@
 				interrupts = <189 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 
@@ -699,7 +684,6 @@
 				interrupts = <190 0>;
 				#pwm-cells = <2>;
 				clocks = <&ccm IMX_CCM_PWM_CLK 0 0>;
-				nxp,prescaler = <128>;
 				status = "disabled";
 			};
 		};

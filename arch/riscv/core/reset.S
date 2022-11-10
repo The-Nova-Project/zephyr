@@ -8,7 +8,6 @@
 #include <zephyr/toolchain.h>
 #include <zephyr/linker/sections.h>
 #include <zephyr/arch/cpu.h>
-#include <offsets.h>
 #include "asm_macros.inc"
 
 /* exports */
@@ -41,7 +40,7 @@ SECTION_FUNC(TEXT, __initialize)
 	csrr a0, mhartid
 	beqz a0, boot_first_core
 
-	li t0, CONFIG_MP_MAX_NUM_CPUS
+	li t0, CONFIG_MP_NUM_CPUS
 	blt a0, t0, boot_secondary_core
 
 loop_unconfigured_cores:
@@ -67,7 +66,7 @@ boot_first_core:
 #ifdef CONFIG_INIT_STACKS
 	/* Pre-populate all bytes in z_interrupt_stacks with 0xAA */
 	la t0, z_interrupt_stacks
-	li t1, __z_interrupt_stack_SIZEOF
+	li t1, CONFIG_ISR_STACK_SIZE
 	add t1, t1, t0
 
 	/* Populate z_interrupt_stacks with 0xaaaaaaaa */
@@ -80,10 +79,10 @@ aa_loop:
 
 	/*
 	 * Initially, setup stack pointer to
-	 * z_interrupt_stacks + __z_interrupt_stack_SIZEOF
+	 * z_interrupt_stacks + CONFIG_ISR_STACK_SIZE
 	 */
 	la sp, z_interrupt_stacks
-	li t0, __z_interrupt_stack_SIZEOF
+	li t0, CONFIG_ISR_STACK_SIZE
 	add sp, sp, t0
 
 #ifdef CONFIG_WDOG_INIT

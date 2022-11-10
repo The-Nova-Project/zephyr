@@ -51,10 +51,8 @@ class Filters:
     TESTSUITE = 'testsuite filter'
     # filters realted to platform definition
     PLATFORM = 'Platform related filter'
-    # in case a test suite was quarantined.
+    # in case a testcase was quarantined.
     QUARENTINE = 'Quarantine filter'
-    # in case a test suite is skipped intentionally .
-    SKIP = 'Skip filter'
 
 
 class TestPlan:
@@ -665,7 +663,7 @@ class TestPlan:
                     instance.add_filter("Not part of integration platforms", Filters.TESTSUITE)
 
                 if ts.skip:
-                    instance.add_filter("Skip filter", Filters.SKIP)
+                    instance.add_filter("Skip filter", Filters.TESTSUITE)
 
                 if tag_filter and not ts.tags.intersection(tag_filter):
                     instance.add_filter("Command line testsuite tag filter", Filters.CMD_LINE)
@@ -786,7 +784,7 @@ class TestPlan:
                 and "Quarantine" not in filtered_instance.reason:
                 # Do not treat this as error if filter type is command line
                 filters = {t['type'] for t in filtered_instance.filters}
-                if Filters.CMD_LINE in filters or Filters.SKIP in filters:
+                if Filters.CMD_LINE in filters:
                     continue
                 filtered_instance.status = "error"
                 filtered_instance.reason += " but is one of the integration platforms"

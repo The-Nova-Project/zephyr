@@ -28,7 +28,6 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #include <zephyr/drivers/clock_control.h>
 #include <zephyr/drivers/clock_control/stm32_clock_control.h>
 #include <zephyr/drivers/pinctrl.h>
-#include <zephyr/irq.h>
 
 #if defined(CONFIG_PTP_CLOCK_STM32_HAL)
 #include <zephyr/drivers/ptp_clock.h>
@@ -799,10 +798,10 @@ static int eth_initialize(const struct device *dev)
 		(clock_control_subsys_t *)&cfg->pclken_tx);
 	ret |= clock_control_on(dev_data->clock,
 		(clock_control_subsys_t *)&cfg->pclken_rx);
-#if DT_INST_CLOCKS_HAS_NAME(0, mac_clk_ptp)
+#if !defined(CONFIG_SOC_SERIES_STM32H7X)
 	ret |= clock_control_on(dev_data->clock,
 		(clock_control_subsys_t *)&cfg->pclken_ptp);
-#endif
+#endif /* !defined(CONFIG_SOC_SERIES_STM32H7X) */
 
 	if (ret) {
 		LOG_ERR("Failed to enable ethernet clock");
@@ -957,7 +956,7 @@ static void eth_iface_init(struct net_if *iface)
 
 	ethernet_init(iface);
 
-	net_if_carrier_off(iface);
+	net_if_flag_set(iface, NET_IF_NO_AUTO_START);
 
 	if (is_first_init) {
 		const struct eth_stm32_hal_dev_cfg *cfg = dev->config;
@@ -1070,10 +1069,10 @@ static const struct eth_stm32_hal_dev_cfg eth0_config = {
 		      .enr = DT_INST_CLOCKS_CELL_BY_NAME(0, mac_clk_tx, bits)},
 	.pclken_rx = {.bus = DT_INST_CLOCKS_CELL_BY_NAME(0, mac_clk_rx, bus),
 		      .enr = DT_INST_CLOCKS_CELL_BY_NAME(0, mac_clk_rx, bits)},
-#if DT_INST_CLOCKS_HAS_NAME(0, mac_clk_ptp)
+#if !defined(CONFIG_SOC_SERIES_STM32H7X)
 	.pclken_ptp = {.bus = DT_INST_CLOCKS_CELL_BY_NAME(0, mac_clk_ptp, bus),
 		       .enr = DT_INST_CLOCKS_CELL_BY_NAME(0, mac_clk_ptp, bits)},
-#endif
+#endif /* !CONFIG_SOC_SERIES_STM32H7X */
 	.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(0),
 };
 

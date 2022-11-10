@@ -10,6 +10,7 @@ supported:
   - spi
   - watchdog
   - uart
+  - pinmux
   - nvs
 testing:
   ignore_tags:

@@ -730,7 +730,7 @@ static void msg_provider_thread(void *p1, void *p2, void *p3)
 	ARG_UNUSED(p2);
 	ARG_UNUSED(p3);
 
-	char msg[MSG_SIZE] = { 0 };
+	char msg[MSG_SIZE];
 
 	k_msgq_put(&triggered_from_msgq_test.msgq, &msg, K_NO_WAIT);
 }

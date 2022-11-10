@@ -11,7 +11,6 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/dt-bindings/gpio/nxp-kinetis-gpio.h>
-#include <zephyr/irq.h>
 #include <soc.h>
 #include <fsl_common.h>
 #include <fsl_port.h>

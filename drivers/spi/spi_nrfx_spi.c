@@ -11,7 +11,6 @@
 #include <nrfx_spi.h>
 
 #include <zephyr/logging/log.h>
-#include <zephyr/irq.h>
 LOG_MODULE_REGISTER(spi_nrfx_spi, CONFIG_SPI_LOG_LEVEL);
 
 #include "spi_context.h"

@@ -512,19 +512,19 @@ serial port:
    https://developer.arm.com/tools-and-software/development-boards/fpga-prototyping-boards/mps2
 
 .. _MPS2+ AN521 Technical Reference Manual (TRM):
-   https://developer.arm.com/documentation/dai0521/latest/
+   http://infocenter.arm.com/help/topic/com.arm.doc.dai0521c/DAI0521C_Example_SSE200_Subsystem_for_MPS2plus.pdf
 
 .. _Cortex M33 Generic User Guide:
-   https://developer.arm.com/documentation/100235/latest/
+   http://infocenter.arm.com/help/topic/com.arm.doc.100235_0004_00_en/arm_cortex_m33_dgug_100235_0004_00_en.pdf
 
 .. _Trusted Firmware M:
-   https://tf-m-user-guide.trustedfirmware.org/building/tfm_build_instruction.html
+   https://git.trustedfirmware.org/trusted-firmware-m.git/tree/docs/user_guides/tfm_build_instruction.rst
 
 .. _Corelink SSE-200 Subsystem:
-   https://developer.arm.com/documentation/dto0051/latest/subsystem-overview/about-the-sse-200
+   https://developer.arm.com/products/system-design/subsystems/corelink-sse-200-subsystem
 
 .. _IDAU:
-   https://developer.arm.com/documentation/100690/latest/Attribution-units--SAU-and-IDAU-
+   https://developer.arm.com/docs/100690/latest/attribution-units-sau-and-idau
 
 .. _AMBA®:
    https://developer.arm.com/products/architecture/system-architectures/amba

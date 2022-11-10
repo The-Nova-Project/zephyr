@@ -845,7 +845,6 @@ static void isr_common_done(void *param)
 
 #if defined(CONFIG_BT_CTLR_ADV_EXT)
 	lll->is_adv_ind = 0U;
-	lll->is_aux_sched = 0U;
 #endif /* CONFIG_BT_CTLR_ADV_EXT */
 
 	/* setup tIFS switching */
@@ -1278,7 +1277,7 @@ static inline int isr_rx_pdu(struct lll_scan *lll, struct pdu_adv *pdu_adv_rx,
 	} else if (((pdu_adv_rx->type == PDU_ADV_TYPE_ADV_IND) ||
 		    (pdu_adv_rx->type == PDU_ADV_TYPE_SCAN_IND)) &&
 		   (pdu_adv_rx->len <= sizeof(struct pdu_adv_adv_ind)) &&
-		   lll->type && !lll->state &&
+		   lll->type &&
 #if defined(CONFIG_BT_CENTRAL)
 		   !lll->conn) {
 #else /* !CONFIG_BT_CENTRAL */

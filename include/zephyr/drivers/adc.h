@@ -15,7 +15,6 @@
 
 #include <zephyr/device.h>
 #include <zephyr/dt-bindings/adc/adc.h>
-#include <zephyr/kernel.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -13,7 +13,6 @@
 #include <zephyr/usb/usb_device.h>
 #include <soc.h>
 #include <zephyr/device.h>
-#include <zephyr/kernel.h>
 #include "usb.h"
 #include "usb_device.h"
 #include "usb_device_config.h"
@@ -31,7 +30,6 @@
 
 #define LOG_LEVEL CONFIG_USB_DRIVER_LOG_LEVEL
 #include <zephyr/logging/log.h>
-#include <zephyr/irq.h>
 LOG_MODULE_REGISTER(usb_dc_mcux);
 
 static void usb_isr_handler(void);

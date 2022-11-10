@@ -19,7 +19,6 @@
 #include <zephyr/drivers/flash.h>
 #include <zephyr/dt-bindings/flash_controller/ospi.h>
 #include <zephyr/drivers/gpio.h>
-#include <zephyr/irq.h>
 
 #include "spi_nor.h"
 #include "jesd216.h"
@@ -50,20 +49,20 @@ LOG_MODULE_REGISTER(flash_stm32_ospi, CONFIG_FLASH_LOG_LEVEL);
 #define SPI_NOR_WRITEOC_NONE 0xFF
 
 #if STM32_OSPI_USE_DMA
-static const uint32_t table_m_size[] = {
+uint32_t table_m_size[] = {
 	LL_DMA_MDATAALIGN_BYTE,
 	LL_DMA_MDATAALIGN_HALFWORD,
 	LL_DMA_MDATAALIGN_WORD,
 };
 
-static const uint32_t table_p_size[] = {
+uint32_t table_p_size[] = {
 	LL_DMA_PDATAALIGN_BYTE,
 	LL_DMA_PDATAALIGN_HALFWORD,
 	LL_DMA_PDATAALIGN_WORD,
 };
 
 /* Lookup table to set dma priority from the DTS */
-static const uint32_t table_priority[] = {
+uint32_t table_priority[] = {
 	DMA_PRIORITY_LOW,
 	DMA_PRIORITY_MEDIUM,
 	DMA_PRIORITY_HIGH,

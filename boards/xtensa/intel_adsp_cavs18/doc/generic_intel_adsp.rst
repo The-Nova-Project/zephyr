@@ -17,20 +17,8 @@ This documentation describes how to run the intel_adsp_cavs boards. Including:
 Set up the environment
 **********************
 
-1. Copy following two tools to the $HOME directory of the target machine (DUT):
-
-- soc/xtensa/intel_adsp/tools/cavstool.py
-   (The firmware loader)
-
-- soc/xtensa/intel_adsp/tools/remote-fw-service.py
-   (The remote service provider)
-
-   You can use scp command to copy them to DUT, Ex.
-
-.. code-block:: console
-
-   $scp boards/xtensa/intel_adsp/tools/cavstool.py user@myboard:~
-   $scp boards/xtensa/intel_adsp/tools/remote-fw-service.py user@myboard:~
+1. Copy soc/xtensa/intel_adsp/tools/cavstool.py to the target
+   host machine (DUT).
 
 2. In your build machine, install the rimage tool, the signed key and
    the toml config file. Please refer to please refer:
@@ -67,7 +55,7 @@ Build and run the tests
 
 .. code-block:: console
 
-   sudo ./remote-fw-service.py
+   sudo ./cavstool.py
 
 2. Build the application. Take hello world as an example:
 
@@ -116,22 +104,22 @@ using, you can do it with following parameters:
 .. code-block:: console
 
    # with specifying the port
-   sudo ./remote-fw-service.py --log-port 54321 --req-port 12345
+   sudo ./cavstool.py --log-port 54321 --req-port 12345
 
    # can be simplified with
-   sudo ./remote-fw-service -p 54321 -r 12345
+   sudo ./cavstool.py -p 54321 -r 12345
 
    # with specifying a IP address
-   sudo ./remote-fw-service -s 192.168.0.2
+   sudo ./cavstool.py -s 192.168.0.2
 
    # with specifying the IP address with a log port
-   sudo ./remote-fw-service -s 192.168.0.2:54321
+   sudo ./cavstool.py -s 192.168.0.2:54321
 
    # with specifying the IP, log and request port
-   sudo ./remote-fw-service -s 192.168.0.2:54321 -r 12345
+   sudo ./cavstool.py -s 192.168.0.2:54321 -r 12345
 
    # Also works in this way
-   sudo ./remote-fw-service -s 192.168.0.2 -p 54321 -r 12345
+   sudo ./cavstool.py -s 192.168.0.2 -p 54321 -r 12345
 
 
 Run by twister
@@ -201,10 +189,10 @@ like following example. Assume you have a log port of 54321 and a req port
      platform: intel_adsp_cavs25
      product: None
      runner: intel_adsp
-     serial_pty: "/home/user/zephyrproject/zephyr/soc/xtensa/intel_adsp/tools/cavstool_client.py,-s,192.168.1.4,--log-port,54321,-l"
+     serial_pty: "/home/user/zephyrproject/zephyr/soc/xtensa/intel_adsp/tools/cavstool_client.py,-s,192.168.1.4,--port-log,54321,-l"
      runner_params:
        - --remote-host=192.168.1.4
-       - --tool-opt=--req-port
+       - --tool-opt=--port-req
        - --tool-opt=12345
 
 

@@ -1,0 +1,46 @@
+&uart1 {
+    reg = <0xf0004000 0x4
+        0xf0004004 0x4
+        0xf0004008 0x4
+        0xf000400c 0x4
+        0xf0004010 0x4
+        0xf0004014 0x4
+        0xf0004018 0x4
+        0xf000401c 0x4>;
+    reg-names = "rxtx",
+        "txfull",
+        "rxempty",
+        "ev_status",
+        "ev_pending",
+        "ev_enable",
+        "txempty",
+        "rxfull";
+    interrupts = <0x0 0>;
+};
+&timer0 {
+    reg = <0xf0003800 0x4
+        0xf0003804 0x4
+        0xf0003808 0x4
+        0xf000380c 0x4
+        0xf0003810 0x4
+        0xf0003814 0x4
+        0xf0003818 0x4
+        0xf000381c 0x4
+        0xf0003820 0x4
+        0xf0003824 0x8>;
+    reg-names = "load",
+        "reload",
+        "en",
+        "update_value",
+        "value",
+        "ev_status",
+        "ev_pending",
+        "ev_enable",
+        "uptime_latch",
+        "uptime_cycles";
+    interrupts = <0x1 0>;
+};
+&ram0 {
+    reg = <0x40000000 0x10000000>;
+};
+

@@ -36,8 +36,7 @@ class TwisterConfigParser:
                        "filter": {"type": "str"},
                        "harness": {"type": "str", "default": "test"},
                        "harness_config": {"type": "map", "default": {}},
-                       "seed": {"type": "int", "default": 0},
-                       "sysbuild": {"type": "bool", "default": False}
+                       "seed": {"type": "int", "default": 0}
                        }
 
     def __init__(self, filename, schema):
