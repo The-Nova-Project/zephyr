@@ -20,12 +20,9 @@
  * @{
  */
 
-#include <errno.h>
-
 #include <zephyr/types.h>
 #include <stddef.h>
 #include <zephyr/device.h>
-#include <zephyr/sys_clock.h>
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -413,7 +410,6 @@ static inline int z_impl_counter_get_value_64(const struct device *dev,
  *		    interrupts or requested channel).
  * @retval -EINVAL if alarm settings are invalid.
  * @retval -ETIME  if absolute alarm was set too late.
- * @retval -EBUSY  if alarm is already active.
  */
 __syscall int counter_set_channel_alarm(const struct device *dev,
 					uint8_t chan_id,

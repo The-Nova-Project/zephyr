@@ -12,7 +12,6 @@
 #include "util/mem.h"
 #include "util/memq.h"
 #include "util/mayfly.h"
-#include "util/dbuf.h"
 
 #include "hal/ccm.h"
 #include "hal/radio.h"
@@ -26,7 +25,6 @@
 #include "lll/lll_vendor.h"
 #include "lll_clock.h"
 #include "lll_scan.h"
-#include "lll/lll_df_types.h"
 #include "lll_sync.h"
 #include "lll_sync_iso.h"
 
@@ -141,7 +139,6 @@ uint8_t ll_big_sync_create(uint8_t big_handle, uint16_t sync_handle,
 	lll->ctrl = 0U;
 	lll->cssn_curr = 0U;
 	lll->cssn_next = 0U;
-	lll->term_reason = 0U;
 
 	/* TODO: Implement usage of MSE to limit listening to subevents */
 
@@ -519,11 +516,7 @@ void ull_sync_iso_done(struct node_rx_event_done *done)
 
 	/* Events elapsed used in timeout checks below */
 	latency_event = lll->latency_event;
-	if (lll->latency_prepare) {
-		elapsed_event = latency_event + lll->latency_prepare;
-	} else {
-		elapsed_event = latency_event + 1U;
-	}
+	elapsed_event = latency_event + 1U;
 
 	/* Sync drift compensation and new skip calculation
 	 */

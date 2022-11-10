@@ -13,7 +13,6 @@
 #include <zephyr/drivers/timer/nrf_rtc_timer.h>
 #include <zephyr/sys_clock.h>
 #include <hal/nrf_rtc.h>
-#include <zephyr/irq.h>
 
 #define EXT_CHAN_COUNT CONFIG_NRF_RTC_TIMER_USER_CHAN_COUNT
 #define CHAN_COUNT (EXT_CHAN_COUNT + 1)

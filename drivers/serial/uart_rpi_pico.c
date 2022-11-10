@@ -8,7 +8,6 @@
 #include <zephyr/drivers/uart.h>
 #include <zephyr/drivers/reset.h>
 #include <zephyr/drivers/pinctrl.h>
-#include <zephyr/irq.h>
 
 /* pico-sdk includes */
 #include <hardware/uart.h>

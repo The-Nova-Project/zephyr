@@ -50,7 +50,7 @@ config SERIAL_SUPPORT_WIDE_DATA
 
 config UART_USE_RUNTIME_CONFIGURE
 	bool "Runtime configuration for UART controllers"
-	default y
+	default n
 	help
 	  Enable runtime configuration of UART controllers.
 	  This allows applications to call uart_configure() to
@@ -170,8 +170,6 @@ source "drivers/serial/Kconfig.psoc6"
 
 source "drivers/serial/Kconfig.pl011"
 
-source "drivers/serial/Kconfig.ql_usbserialport_s3b"
-
 source "drivers/serial/Kconfig.rv32m1_lpuart"
 
 source "drivers/serial/Kconfig.rpi_pico"
@@ -203,7 +201,5 @@ source "drivers/serial/Kconfig.neorv32"
 source "drivers/serial/Kconfig.xen"
 
 source "drivers/serial/Kconfig.smartbond"
-
-source "drivers/serial/Kconfig.s32"
 
 endif # SERIAL

@@ -81,12 +81,8 @@ these references:
 Supported Features
 ==================
 
-The mimxrt1160_evk board configuration supports the hardware features listed
-below.  For additional features not yet supported, please also refer to the
-:ref:`mimxrt1170_evk` , which is the superset board in NXP's i.MX RT11xx family.
-NXP prioritizes enabling the superset board with NXP's Full Platform Support for
-Zephyr.  Therefore, the mimxrt1170_evk board may have additional features
-already supported, which can also be re-used on this mimxrt1160_evk board:
+The mimxrt1160_evk board configuration supports the following hardware
+features:
 
 +-----------+------------+-------------------------------------+
 | Interface | Controller | Driver/Component                    |
@@ -199,17 +195,15 @@ however the :ref:`pyocd-debug-host-tools` do not yet support programming the
 external flashes on this board so you must reconfigure the board for one of the
 following debug probes instead.
 
-.. _Using J-Link RT1160:
-
-Using J-Link
+:ref:`jlink-external-debug-probe`
 ---------------------------------
 
 Install the :ref:`jlink-debug-host-tools` and make sure they are in your search
 path.
 
-There are two options: the onboard debug circuit can be updated with Segger
-J-Link firmware, or :ref:`jlink-external-debug-probe` can be attached to the
-EVK. See `Using J-Link with MIMXRT1160-EVK or MIMXRT1170-EVK`_ for more details.
+Attach a J-Link 20-pin connector to J1. Check that jumpers J6 and J7
+are **off** (they are on by default when boards ship from the factory) to
+ensure SWD signals are disconnected from the OpenSDA microcontroller.
 
 Configuring a Console
 =====================
@@ -272,7 +266,7 @@ should see the following message in the terminal:
    https://www.nxp.com/design/development-boards/i-mx-evaluation-and-development-boards/i-mx-rt1160-evaluation-kit:MIMXRT1160-EVK
 
 .. _MIMXRT1160-EVK Board Hardware User's Guide:
-   https://www.nxp.com/webapp/Download?colCode=UM11617
+   https://www.nxp.com/docs/en/user-guide/UM11617.pdf
 
 .. _i.MX RT1160 Website:
    https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/i-mx-rt-crossover-mcus/i-mx-rt1160-crossover-mcu-family-high-performance-mcu-with-arm-cortex-m7-and-cortex-m4-cores:i.MX-RT1160
@@ -282,6 +276,3 @@ should see the following message in the terminal:
 
 .. _i.MX RT1160 Reference Manual:
    https://www.nxp.com/webapp/Download?colCode=IMXRT1160RM
-
-.. _Using J-Link with MIMXRT1160-EVK or MIMXRT1170-EVK:
-   https://community.nxp.com/t5/i-MX-RT-Knowledge-Base/Using-J-Link-with-MIMXRT1160-EVK-or-MIMXRT1170-EVK/ta-p/1529760

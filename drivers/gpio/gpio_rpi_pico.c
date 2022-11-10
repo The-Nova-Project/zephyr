@@ -6,7 +6,6 @@
 
 #include <errno.h>
 #include <zephyr/drivers/gpio.h>
-#include <zephyr/irq.h>
 
 /* pico-sdk includes */
 #include <hardware/gpio.h>

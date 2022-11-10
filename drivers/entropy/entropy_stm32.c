@@ -26,7 +26,6 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/drivers/clock_control.h>
 #include <zephyr/drivers/clock_control/stm32_clock_control.h>
-#include <zephyr/irq.h>
 #include "stm32_hsem.h"
 
 #define IRQN		DT_INST_IRQN(0)

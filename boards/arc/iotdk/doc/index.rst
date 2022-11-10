@@ -26,7 +26,7 @@ Hardware
 ********
 
 For hardware feature details, refer to : `ARC IoT Development Kit
-<https://embarc.org/project/arc-iot-development-kit/>`__
+<http://embarc.org/embarc_osp/doc/build/html/board/iotdk.html>`__
 
 
 Programming and Debugging

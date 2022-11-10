@@ -17,13 +17,12 @@ static volatile bool set_locked;
 static volatile bool set_unlocked;
 static volatile bool ordered_access_locked;
 static volatile bool ordered_access_unlocked;
-static const struct bt_csis_client_csis_inst *inst;
+static struct bt_csis_client_csis_inst *inst;
 
 static uint8_t members_found;
 static struct k_work_delayable discover_members_timer;
 static bt_addr_le_t addr_found[CONFIG_BT_MAX_CONN];
-static struct bt_conn *conns[CONFIG_BT_MAX_CONN];
-static const struct bt_csis_client_set_member *set_members[CONFIG_BT_MAX_CONN];
+static struct bt_csis_client_set_member set_members[CONFIG_BT_MAX_CONN];
 
 static void csis_client_lock_set_cb(int err);
 
@@ -51,23 +50,17 @@ static void csis_client_lock_set_cb(int err)
 	set_locked = true;
 }
 
-static void csis_discover_cb(struct bt_conn *conn,
-			     const struct bt_csis_client_set_member *member,
-			     int err, size_t set_count)
+static void csis_discover_cb(struct bt_csis_client_set_member *member, int err,
+			     uint8_t set_count)
 {
-	uint8_t conn_index;
-
 	printk("%s\n", __func__);
 
-	if (err != 0 || set_count == 0U) {
-		FAIL("Discover failed (%d)\n", err);
+	if (err != 0) {
+		FAIL("Init failed (%d)\n", err);
 		return;
 	}
 
-	conn_index = bt_conn_index(conn);
-
 	inst = &member->insts[0];
-	set_members[conn_index] = member;
 	discovered = true;
 }
 
@@ -139,7 +132,7 @@ static bool csis_client_oap_cb(const struct bt_csis_client_set_info *set_info,
 static bool is_discovered(const bt_addr_le_t *addr)
 {
 	for (int i = 0; i < members_found; i++) {
-		if (bt_addr_le_eq(addr, &addr_found[i])) {
+		if (bt_addr_le_cmp(addr, &addr_found[i]) == 0) {
 			return true;
 		}
 	}
@@ -200,7 +193,7 @@ static void discover_members_timer_handler(struct k_work *work)
 	     members_found, inst->info.set_size);
 }
 
-static void ordered_access(const struct bt_csis_client_set_member **members,
+static void ordered_access(struct bt_csis_client_set_member **members,
 			   size_t count, bool expect_locked)
 {
 	int err;
@@ -232,7 +225,7 @@ static void test_main(void)
 {
 	int err;
 	char addr[BT_ADDR_LE_STR_LEN];
-	const struct bt_csis_client_set_member *locked_members[CONFIG_BT_MAX_CONN];
+	struct bt_csis_client_set_member *locked_members[CONFIG_BT_MAX_CONN];
 	uint8_t connected_member_count = 0;
 
 	err = bt_enable(NULL);
@@ -268,7 +261,7 @@ static void test_main(void)
 
 	bt_addr_le_to_str(&addr_found[0], addr, sizeof(addr));
 	err = bt_conn_le_create(&addr_found[0], BT_CONN_LE_CREATE_CONN,
-				BT_LE_CONN_PARAM_DEFAULT, &conns[0]);
+				BT_LE_CONN_PARAM_DEFAULT, &set_members[0].conn);
 	if (err != 0) {
 		FAIL("Failed to connect to %s: %d\n", err);
 		return;
@@ -278,7 +271,7 @@ static void test_main(void)
 	WAIT_FOR_COND(is_connected);
 	connected_member_count++;
 
-	err = bt_csis_client_discover(conns[0]);
+	err = bt_csis_client_discover(&set_members[0]);
 	if (err != 0) {
 		FAIL("Failed to initialize CSIS client for connection %d\n",
 		     err);
@@ -317,7 +310,7 @@ static void test_main(void)
 		err = bt_conn_le_create(&addr_found[i],
 					BT_CONN_LE_CREATE_CONN,
 					BT_LE_CONN_PARAM_DEFAULT,
-					&conns[i]);
+					&set_members[i].conn);
 		if (err != 0) {
 			FAIL("Failed to connect to %s: %d\n", addr, err);
 			return;
@@ -329,7 +322,7 @@ static void test_main(void)
 
 		discovered = false;
 		printk("Doing discovery on member[%u]", i);
-		err = bt_csis_client_discover(conns[i]);
+		err = bt_csis_client_discover(&set_members[i]);
 		if (err != 0) {
 			FAIL("Failed to initialize CSIS client for connection %d\n",
 			      err);
@@ -340,7 +333,7 @@ static void test_main(void)
 	}
 
 	for (size_t i = 0; i < ARRAY_SIZE(locked_members); i++) {
-		locked_members[i] = set_members[i];
+		locked_members[i] = &set_members[i];
 	}
 
 	ordered_access(locked_members, connected_member_count, false);
@@ -399,7 +392,7 @@ static void test_main(void)
 
 	for (uint8_t i = 0; i < members_found; i++) {
 		printk("Disconnecting member[%u] (%s)", i, addr);
-		err = bt_conn_disconnect(conns[i],
+		err = bt_conn_disconnect(set_members[i].conn,
 					 BT_HCI_ERR_REMOTE_USER_TERM_CONN);
 		(void)memset(&set_members[i], 0, sizeof(set_members[i]));
 		if (err != 0) {

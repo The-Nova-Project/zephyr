@@ -43,12 +43,8 @@ For more information about the LPC55S06 SoC and LPCXPresso55S06 board, see:
 Supported Features
 ==================
 
-The lpcxpresso55s06 board configuration supports the hardware features listed
-below.  For additional features not yet supported, please also refer to the
-:ref:`lpcxpresso55s69` , which is the superset board in NXP's LPC55xx series.
-NXP prioritizes enabling the superset board with NXP's Full Platform Support for
-Zephyr.  Therefore, the lpcxpresso55s69 board may have additional features
-already supported, which can also be re-used on this lpcxpresso55s06 board:
+The lpcxpresso55s06 board configuration supports the following
+hardware features:
 
 +-----------+------------+-------------------------------------+
 | Interface | Controller | Driver/Component                    |
@@ -61,8 +57,7 @@ already supported, which can also be re-used on this lpcxpresso55s06 board:
 +-----------+------------+-------------------------------------+
 | GPIO      | on-chip    | gpio                                |
 +-----------+------------+-------------------------------------+
-| USART     | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
+| USART     | on-chip    | serial port                         |
 +-----------+------------+-------------------------------------+
 | CLOCK     | on-chip    | clock_control                       |
 +-----------+------------+-------------------------------------+

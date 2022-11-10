@@ -6,7 +6,6 @@
 
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/sensor.h>
-#include <zephyr/kernel.h>
 #include <zephyr/sys/byteorder.h>
 
 #include <zephyr/logging/log.h>

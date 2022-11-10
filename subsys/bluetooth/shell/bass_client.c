@@ -101,7 +101,8 @@ static void bass_client_recv_state_cb(struct bt_conn *conn, int err,
 		/* Lookup matching PA sync */
 		for (int i = 0; i < ARRAY_SIZE(per_adv_syncs); i++) {
 			if (per_adv_syncs[i] &&
-			    bt_addr_le_eq(&per_adv_syncs[i]->addr, &state->addr)) {
+			    bt_addr_le_cmp(&per_adv_syncs[i]->addr,
+					    &state->addr) == 0) {
 				per_adv_sync = per_adv_syncs[i];
 				break;
 			}
@@ -140,7 +141,8 @@ static void bass_client_recv_state_cb(struct bt_conn *conn, int err,
 				return;
 			}
 
-			if (bt_addr_le_eq(&oob_local.addr, &state->addr)) {
+			if (bt_addr_le_cmp(&oob_local.addr,
+					   &state->addr) == 0) {
 				ext_adv = adv_sets[i];
 				break;
 			}

@@ -1,0 +1,14 @@
+# Copyright (c) 2020 Cobham Gaisler AB
+# SPDX-License-Identifier: Apache-2.0
+
+choice
+	prompt "QEMU RISC-V VirtIO Board"
+	depends on SOC_SERIES_RISCV_AWS
+
+config SOC_RISCV_AWS
+	bool "QEMU RISC-V VirtIO Board"
+	select INCLUDE_RESET_VECTOR
+	select CONFIG_RISCV_ISA_EXT_M
+	select CONFIG_64BIT
+
+endchoice

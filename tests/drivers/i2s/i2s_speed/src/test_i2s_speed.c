@@ -179,7 +179,7 @@ static int configure_stream(const struct device *dev_i2s, enum i2s_dir dir)
 }
 
 /** Configure I2S TX transfer. */
-ZTEST(drivers_i2s_speed, test_i2s_tx_transfer_configure)
+void test_i2s_tx_transfer_configure(void)
 {
 	int ret;
 
@@ -191,7 +191,7 @@ ZTEST(drivers_i2s_speed, test_i2s_tx_transfer_configure)
 }
 
 /** Configure I2S RX transfer. */
-ZTEST(drivers_i2s_speed, test_i2s_rx_transfer_configure)
+void test_i2s_rx_transfer_configure(void)
 {
 	int ret;
 
@@ -210,7 +210,7 @@ ZTEST(drivers_i2s_speed, test_i2s_rx_transfer_configure)
  * - TX stream DRAIN trigger empties the transmit queue.
  * - RX stream STOP trigger stops reception.
  */
-ZTEST(drivers_i2s_speed, test_i2s_transfer_short)
+void test_i2s_transfer_short(void)
 {
 	if (IS_ENABLED(CONFIG_I2S_TEST_USE_I2S_DIR_BOTH)) {
 		TC_PRINT("RX/TX transfer requires use of I2S_DIR_BOTH.\n");
@@ -288,7 +288,7 @@ ZTEST(drivers_i2s_speed, test_i2s_transfer_short)
  * - TX stream DRAIN trigger empties the transmit queue.
  * - RX stream STOP trigger stops reception.
  */
-ZTEST(drivers_i2s_speed, test_i2s_transfer_long)
+void test_i2s_transfer_long(void)
 {
 	if (IS_ENABLED(CONFIG_I2S_TEST_USE_I2S_DIR_BOTH)) {
 		TC_PRINT("RX/TX transfer requires use of I2S_DIR_BOTH.\n");
@@ -371,7 +371,7 @@ ZTEST(drivers_i2s_speed, test_i2s_transfer_long)
 	zassert_equal(num_verified, NUM_BLOCKS, "Invalid RX blocks received");
 }
 
-ZTEST(drivers_i2s_speed, test_i2s_dir_both_transfer_configure)
+void test_i2s_dir_both_transfer_configure(void)
 {
 	int ret;
 
@@ -400,7 +400,7 @@ ZTEST(drivers_i2s_speed, test_i2s_dir_both_transfer_configure)
  * - Sending / receiving a short sequence of data returns success.
  * - DRAIN trigger empties the transmit queue and stops both streams.
  */
-ZTEST(drivers_i2s_speed, test_i2s_dir_both_transfer_short)
+void test_i2s_dir_both_transfer_short(void)
 {
 	if (!dir_both_supported) {
 		TC_PRINT("I2S_DIR_BOTH value is not supported.\n");
@@ -467,7 +467,7 @@ ZTEST(drivers_i2s_speed, test_i2s_dir_both_transfer_short)
  * - Sending / receiving a long sequence of data returns success.
  * - DRAIN trigger empties the transmit queue and stops both streams.
  */
-ZTEST(drivers_i2s_speed, test_i2s_dir_both_transfer_long)
+void test_i2s_dir_both_transfer_long(void)
 {
 	if (!dir_both_supported) {
 		TC_PRINT("I2S_DIR_BOTH value is not supported.\n");

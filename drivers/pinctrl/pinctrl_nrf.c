@@ -289,8 +289,7 @@ int pinctrl_configure_pins(const pinctrl_soc_pin_t *pins, uint8_t pin_cnt,
 			break;
 		case NRF_FUN_QSPI_CSN:
 			NRF_PSEL_QSPI(reg, CSN) = pin;
-			write = 1U;
-			dir = NRF_GPIO_PIN_DIR_OUTPUT;
+			dir = NRF_GPIO_PIN_DIR_INPUT;
 			input = NRF_GPIO_PIN_INPUT_DISCONNECT;
 			break;
 		case NRF_FUN_QSPI_IO0:

@@ -40,7 +40,6 @@ app=tests/bluetooth/bsim_bt/bsim_test_gatt compile
 app=tests/bluetooth/bsim_bt/bsim_test_gatt_write compile
 app=tests/bluetooth/bsim_bt/bsim_test_l2cap compile
 app=tests/bluetooth/bsim_bt/bsim_test_l2cap_userdata compile
-app=tests/bluetooth/bsim_bt/bsim_test_l2cap_stress compile
 app=tests/bluetooth/bsim_bt/bsim_test_iso compile
 app=tests/bluetooth/bsim_bt/bsim_test_iso conf_file=prj_vs_dp.conf \
   compile
@@ -60,4 +59,3 @@ app=tests/bluetooth/bsim_bt/edtt_ble_test_app/gatt_test_app \
 app=tests/bluetooth/bsim_bt/bsim_test_mesh compile
 app=tests/bluetooth/bsim_bt/bsim_test_mesh conf_file=prj_low_lat.conf compile
 app=tests/bluetooth/bsim_bt/bsim_test_mesh conf_file=prj_pst.conf compile
-app=tests/bluetooth/bsim_bt/bsim_test_mesh conf_file=prj_gatt.conf compile

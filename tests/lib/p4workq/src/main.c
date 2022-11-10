@@ -180,9 +180,7 @@ ZTEST(lib_p4wq, test_fill_queue)
 	 * we can be sure to run).  They should all be made active
 	 * when added.
 	 */
-	unsigned int num_cpus = arch_num_cpus();
-
-	for (int i = 0; i < num_cpus; i++) {
+	for (int i = 0; i < CONFIG_MP_NUM_CPUS; i++) {
 		zassert_true(add_new_item(p0), "thread should be active");
 	}
 
@@ -194,7 +192,7 @@ ZTEST(lib_p4wq, test_fill_queue)
 	 * we run out of threads.
 	 */
 	for (int pri = p0 - 1; pri >= p0 - 4; pri++) {
-		for (int i = 0; i < num_cpus; i++) {
+		for (int i = 0; i < CONFIG_MP_NUM_CPUS; i++) {
 			bool active = add_new_item(pri);
 
 			if (!active) {

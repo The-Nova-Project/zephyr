@@ -24,7 +24,6 @@ LOG_MODULE_REGISTER(spi_ll_stm32);
 #endif
 #include <zephyr/drivers/clock_control/stm32_clock_control.h>
 #include <zephyr/drivers/clock_control.h>
-#include <zephyr/irq.h>
 
 #include "spi_ll_stm32.h"
 

@@ -35,6 +35,8 @@
 #include "lll_tim_internal.h"
 #include "lll_prof_internal.h"
 
+#define LOG_MODULE_NAME bt_ctlr_llsw_openisa_lll_scan
+#include "common/log.h"
 #include <soc.h>
 #include "hal/debug.h"
 

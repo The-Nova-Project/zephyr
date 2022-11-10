@@ -512,7 +512,7 @@ static uint8_t aics_client_read_desc_cb(struct bt_conn *conn, uint8_t err,
 	}
 
 	if (data) {
-		LOG_HEXDUMP_DBG(data, length, "Input description read");
+		BT_HEXDUMP_DBG(data, length, "Input description read");
 
 		/* Truncate if too large */
 		if (length > sizeof(desc) - 1) {

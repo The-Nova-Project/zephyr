@@ -7,7 +7,6 @@
 
 #include <errno.h>
 #include <zephyr/drivers/uart.h>
-#include <zephyr/irq.h>
 #include <em_usart.h>
 #include <em_gpio.h>
 #include <em_cmu.h>

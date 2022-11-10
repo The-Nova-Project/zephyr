@@ -515,15 +515,12 @@ static uint32_t dhcpv4_rebinding_timeleft(struct net_if *iface, int64_t now)
 	return rem;
 }
 
-static void dhcpv4_enter_requesting(struct net_if *iface, struct dhcp_msg *msg)
+static void dhcpv4_enter_requesting(struct net_if *iface)
 {
 	iface->config.dhcpv4.attempts = 0U;
 	iface->config.dhcpv4.state = NET_DHCPV4_REQUESTING;
 	NET_DBG("enter state=%s",
 		net_dhcpv4_state_name(iface->config.dhcpv4.state));
-
-	memcpy(iface->config.dhcpv4.requested_ip.s4_addr,
-	       msg->yiaddr, sizeof(msg->yiaddr));
 
 	dhcpv4_send_request(iface);
 }
@@ -888,8 +885,7 @@ end:
 	return true;
 }
 
-static inline void dhcpv4_handle_msg_offer(struct net_if *iface,
-					   struct dhcp_msg *msg)
+static inline void dhcpv4_handle_msg_offer(struct net_if *iface)
 {
 	switch (iface->config.dhcpv4.state) {
 	case NET_DHCPV4_DISABLED:
@@ -900,7 +896,7 @@ static inline void dhcpv4_handle_msg_offer(struct net_if *iface,
 	case NET_DHCPV4_BOUND:
 		break;
 	case NET_DHCPV4_SELECTING:
-		dhcpv4_enter_requesting(iface, msg);
+		dhcpv4_enter_requesting(iface);
 		break;
 	}
 }
@@ -945,16 +941,11 @@ static void dhcpv4_handle_msg_nak(struct net_if *iface)
 	case NET_DHCPV4_DISABLED:
 	case NET_DHCPV4_INIT:
 	case NET_DHCPV4_SELECTING:
+	case NET_DHCPV4_RENEWING:
 	case NET_DHCPV4_BOUND:
 		break;
-	case NET_DHCPV4_RENEWING:
 	case NET_DHCPV4_REQUESTING:
 	case NET_DHCPV4_REBINDING:
-		if (!net_if_ipv4_addr_rm(iface,
-					 &iface->config.dhcpv4.requested_ip)) {
-			NET_DBG("Failed to remove addr from iface");
-		}
-
 		/* Restart the configuration process. */
 		dhcpv4_enter_selecting(iface);
 		break;
@@ -963,8 +954,7 @@ static void dhcpv4_handle_msg_nak(struct net_if *iface)
 
 /* Takes and releases lock */
 static void dhcpv4_handle_reply(struct net_if *iface,
-				enum dhcpv4_msg_type msg_type,
-				struct dhcp_msg *msg)
+				enum dhcpv4_msg_type msg_type)
 {
 	NET_DBG("state=%s msg=%s",
 		net_dhcpv4_state_name(iface->config.dhcpv4.state),
@@ -972,7 +962,7 @@ static void dhcpv4_handle_reply(struct net_if *iface,
 
 	switch (msg_type) {
 	case DHCPV4_MSG_TYPE_OFFER:
-		dhcpv4_handle_msg_offer(iface, msg);
+		dhcpv4_handle_msg_offer(iface);
 		break;
 	case DHCPV4_MSG_TYPE_ACK:
 		dhcpv4_handle_msg_ack(iface);
@@ -1065,6 +1055,9 @@ static enum net_verdict net_dhcpv4_input(struct net_conn *conn,
 		goto drop;
 	}
 
+	memcpy(iface->config.dhcpv4.requested_ip.s4_addr,
+	       msg->yiaddr, sizeof(msg->yiaddr));
+
 	net_pkt_acknowledge_data(pkt, &dhcp_access);
 
 	/* SNAME, FILE are not used at the moment, skip it */
@@ -1077,9 +1070,9 @@ static enum net_verdict net_dhcpv4_input(struct net_conn *conn,
 		goto drop;
 	}
 
-	dhcpv4_handle_reply(iface, msg_type, msg);
-
 	net_pkt_unref(pkt);
+
+	dhcpv4_handle_reply(iface, msg_type);
 
 	verdict = NET_OK;
 

@@ -700,9 +700,8 @@ MODEM_CMD_DEFINE(on_cmd_ready)
 					    cmd_handler_data);
 	k_sem_give(&dev->sem_if_ready);
 
-
-	if (net_if_is_carrier_ok(dev->net_iface)) {
-		net_if_carrier_off(dev->net_iface);
+	if (net_if_is_up(dev->net_iface)) {
+		net_if_down(dev->net_iface);
 		LOG_ERR("Unexpected reset");
 	}
 
@@ -1038,15 +1037,15 @@ static void esp_init_work(struct k_work *work)
 
 	LOG_INF("ESP Wi-Fi ready");
 
-	net_if_carrier_on(dev->net_iface);
+	net_if_up(dev->net_iface);
 }
 
 static int esp_reset(const struct device *dev)
 {
 	struct esp_data *data = dev->data;
 
-	if (net_if_is_carrier_ok(data->net_iface)) {
-		net_if_carrier_off(data->net_iface);
+	if (net_if_is_up(data->net_iface)) {
+		net_if_down(data->net_iface);
 	}
 
 #if DT_INST_NODE_HAS_PROP(0, power_gpios)
@@ -1084,7 +1083,7 @@ static int esp_reset(const struct device *dev)
 
 static void esp_iface_init(struct net_if *iface)
 {
-	net_if_carrier_off(iface);
+	net_if_flag_set(iface, NET_IF_NO_AUTO_START);
 	esp_offload_init(iface);
 }
 
@@ -1199,7 +1198,7 @@ static int esp_init(const struct device *dev)
 	k_thread_name_set(&esp_rx_thread, "esp_rx");
 
 	/* Retrieve associated network interface so asynchronous messages can be processed early */
-	data->net_iface = NET_IF_GET(Z_DEVICE_DT_DEV_ID(DT_DRV_INST(0)), 0);
+	data->net_iface = NET_IF_GET(Z_DEVICE_DT_DEV_NAME(DT_DRV_INST(0)), 0);
 
 	/* Reset the modem */
 	ret = esp_reset(dev);

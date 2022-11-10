@@ -502,13 +502,7 @@ check_reschedule:
 	 * We pass it a NULL as we didn't save the whole thread context yet.
 	 * If no scheduling is necessary then NULL will be returned.
 	 */
-	addi sp, sp, -16
-	sr a1, 0(sp)
-	mv a0, zero
-	call z_get_next_switch_handle
-	lr a1, 0(sp)
-	addi sp, sp, 16
-	beqz a0, no_reschedule
+
 
 reschedule:
 

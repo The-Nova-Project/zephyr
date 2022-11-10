@@ -17,7 +17,6 @@
 #include <zephyr/dt-bindings/gpio/andestech-atcgpio100.h>
 #include <zephyr/sys/util.h>
 #include <zephyr/sys/sys_io.h>
-#include <zephyr/irq.h>
 
 #include "gpio_utils.h"
 

@@ -11,8 +11,6 @@
 
 #ifndef ZEPHYR_INCLUDE_DRIVERS_SDHC_H_
 #define ZEPHYR_INCLUDE_DRIVERS_SDHC_H_
-
-#include <errno.h>
 #include <zephyr/device.h>
 #include <zephyr/sd/sd_spec.h>
 
@@ -23,7 +21,7 @@
  * @{
  */
 
-#ifdef __cplusplus
+#ifdef _cplusplus
 extern "C" {
 #endif
 
@@ -431,7 +429,7 @@ static inline int z_impl_sdhc_get_host_props(const struct device *dev,
  * @}
  */
 
-#ifdef __cplusplus
+#ifdef _cplusplus
 }
 #endif
 

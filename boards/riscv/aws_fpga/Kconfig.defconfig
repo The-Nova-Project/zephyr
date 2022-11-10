@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+
+config BUILD_OUTPUT_HEX
+	default y
+
+config BOARD
+	default "aws_fpga" if BOARD_AWS_FPGA
+

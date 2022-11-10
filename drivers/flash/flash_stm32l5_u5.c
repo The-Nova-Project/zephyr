@@ -160,14 +160,8 @@ static int write_dword(const struct device *dev, off_t offset, uint64_t val)
 		return rc;
 	}
 
-	/* Check if this double word is erased and value isn't 0.
-	 *
-	 * It is allowed to write only zeros over an already written dword
-	 * See 6.3.7 in STM32L5 reference manual.
-	 * See 7.3.7 in STM32U5 reference manual.
-	 */
-	if ((flash[0] != 0xFFFFFFFFUL ||
-	     flash[1] != 0xFFFFFFFFUL) && val != 0UL) {
+	/* Check if this double word is erased */
+	if ((flash[0] != 0xFFFFFFFFUL) || (flash[1] != 0xFFFFFFFFUL)) {
 		LOG_ERR("Word at offs %ld not erased", (long)offset);
 		return -EIO;
 	}

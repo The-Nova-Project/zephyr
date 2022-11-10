@@ -11,7 +11,6 @@
 #include <zephyr/device.h>
 #include <soc.h>
 #include <zephyr/drivers/ipm.h>
-#include <zephyr/irq.h>
 #if IS_ENABLED(CONFIG_IPM_IMX_REV2)
 #include "fsl_mu.h"
 #else

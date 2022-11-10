@@ -2,7 +2,6 @@
 # vim: set syntax=python ts=4 :
 #
 # Copyright (c) 20180-2022 Intel Corporation
-# Copyright 2022 NXP
 # SPDX-License-Identifier: Apache-2.0
 
 import math
@@ -162,7 +161,6 @@ class BinaryHandler(Handler):
 
         self.call_west_flash = False
         self.seed = None
-        self.line = b""
 
     def try_kill_process_by_pid(self):
         if self.pid_fn:
@@ -182,39 +180,40 @@ class BinaryHandler(Handler):
             harness.handle(None)
             return
 
-        with open(self.log, "wt") as log_out_fp:
-            timeout_extended = False
-            timeout_time = time.time() + self.timeout
-            while True:
-                this_timeout = timeout_time - time.time()
-                if this_timeout < 0:
-                    break
-                reader_t = threading.Thread(target=self._output_reader, args=(proc,), daemon=True)
-                reader_t.start()
-                reader_t.join(this_timeout)
-                if not reader_t.is_alive() and self.line != b"":
-                    line_decoded = self.line.decode('utf-8', "replace")
-                    stripped_line = line_decoded.rstrip()
-                    logger.debug("OUTPUT: %s", stripped_line)
-                    log_out_fp.write(line_decoded)
-                    log_out_fp.flush()
-                    harness.handle(stripped_line)
-                    if harness.state:
-                        if not timeout_extended or harness.capture_coverage:
-                            timeout_extended = True
-                            if harness.capture_coverage:
-                                timeout_time = time.time() + 30
-                            else:
-                                timeout_time = time.time() + 2
-                else:
-                    reader_t.join(0)
-                    break
-            try:
-                # POSIX arch based ztests end on their own,
-                # so let's give it up to 100ms to do so
-                proc.wait(0.1)
-            except subprocess.TimeoutExpired:
-                self.terminate(proc)
+        log_out_fp = open(self.log, "wt")
+        timeout_extended = False
+        timeout_time = time.time() + self.timeout
+        while True:
+            this_timeout = timeout_time - time.time()
+            if this_timeout < 0:
+                break
+            reader_t = threading.Thread(target=self._output_reader, args=(proc,), daemon=True)
+            reader_t.start()
+            reader_t.join(this_timeout)
+            if not reader_t.is_alive():
+                line = self.line
+                logger.debug("OUTPUT: {0}".format(line.decode('utf-8').rstrip()))
+                log_out_fp.write(line.decode('utf-8'))
+                log_out_fp.flush()
+                harness.handle(line.decode('utf-8').rstrip())
+                if harness.state:
+                    if not timeout_extended or harness.capture_coverage:
+                        timeout_extended = True
+                        if harness.capture_coverage:
+                            timeout_time = time.time() + 30
+                        else:
+                            timeout_time = time.time() + 2
+            else:
+                reader_t.join(0)
+                break
+        try:
+            # POSIX arch based ztests end on their own,
+            # so let's give it up to 100ms to do so
+            proc.wait(0.1)
+        except subprocess.TimeoutExpired:
+            self.terminate(proc)
+
+        log_out_fp.close()
 
     def handle(self):
 
@@ -318,12 +317,15 @@ class DeviceHandler(Handler):
         """
         super().__init__(instance, type_str)
 
-    def monitor_serial(self, ser, halt_event, harness):
+    def monitor_serial(self, ser, halt_fileno, harness):
         if harness.is_pytest:
             harness.handle(None)
             return
 
         log_out_fp = open(self.log, "wt")
+
+        ser_fileno = ser.fileno()
+        readlist = [halt_fileno, ser_fileno]
 
         if self.options.coverage:
             # Set capture_coverage to True to indicate that right after
@@ -334,16 +336,14 @@ class DeviceHandler(Handler):
         ser.flush()
 
         while ser.isOpen():
-            if halt_event.is_set():
+            readable, _, _ = select.select(readlist, [], [], self.timeout)
+
+            if halt_fileno in readable:
                 logger.debug('halted')
                 ser.close()
                 break
-
-            if not ser.in_waiting:
-                # no incoming bytes are waiting to be read from the serial
-                # input buffer, let other threads run
-                time.sleep(0.001)
-                continue
+            if ser_fileno not in readable:
+                continue  # Timeout.
 
             serial_line = None
             try:
@@ -525,29 +525,16 @@ class DeviceHandler(Handler):
 
         ser.flush()
 
-        # turns out the ser.flush() is not enough to clear serial leftover from last case
-        # explicitly readline() can do it reliably
-        old_timeout = ser.timeout
-        # wait for 1s if no serial output
-        ser.timeout = 1
-        # or read 1000 lines at most
-        # if the leftovers are more than 1000 lines, user should realize that once
-        # saw the caught ones and fix it.
-        leftover_lines = ser.readlines(1000)
-        for line in leftover_lines:
-            logger.debug(f"leftover log of previous test: {line}")
-        ser.timeout = old_timeout
-
         harness_name = self.instance.testsuite.harness.capitalize()
         harness_import = HarnessImporter(harness_name)
         harness = harness_import.instance
         harness.configure(self.instance)
-        halt_monitor_evt = threading.Event()
+        read_pipe, write_pipe = os.pipe()
+        start_time = time.time()
 
         t = threading.Thread(target=self.monitor_serial, daemon=True,
-                             args=(ser, halt_monitor_evt, harness))
+                             args=(ser, read_pipe, harness))
         t.start()
-        start_time = time.time()
 
         d_log = "{}/device.log".format(self.instance.build_dir)
         logger.debug('Flash command: %s', command)
@@ -566,10 +553,10 @@ class DeviceHandler(Handler):
                         flash_error = True
                         with open(d_log, "w") as dlog_fp:
                             dlog_fp.write(stderr.decode())
-                        halt_monitor_evt.set()
+                        os.write(write_pipe, b'x')  # halt the thread
                 except subprocess.TimeoutExpired:
                     logger.warning("Flash operation timed out.")
-                    self.terminate(proc)
+                    proc.kill()
                     (stdout, stderr) = proc.communicate()
                     self.instance.status = "error"
                     self.instance.reason = "Device issue (Timeout)"
@@ -579,7 +566,7 @@ class DeviceHandler(Handler):
                 dlog_fp.write(stderr.decode())
 
         except subprocess.CalledProcessError:
-            halt_monitor_evt.set()
+            os.write(write_pipe, b'x')  # halt the thread
             self.instance.status = "error"
             self.instance.reason = "Device issue (Flash error)"
             flash_error = True
@@ -607,6 +594,9 @@ class DeviceHandler(Handler):
             ser_pty_process.terminate()
             outs, errs = ser_pty_process.communicate()
             logger.debug("Process {} terminated outs: {} errs {}".format(serial_pty, outs, errs))
+
+        os.close(write_pipe)
+        os.close(read_pipe)
 
         handler_time = time.time() - start_time
 

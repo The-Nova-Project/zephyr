@@ -1,6 +1,6 @@
 identifier: nsim_em7d_v22
 name: EM Nsim simulator
-type: sim
+type: mcu
 simulation: nsim
 arch: arc
 toolchain:

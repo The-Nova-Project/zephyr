@@ -14,10 +14,6 @@
 	};
 };
 
-&espi_saf0 {
-	status = "okay";
-};
-
 &spi0 {
 	status = "okay";
 	port_sel = <0>;

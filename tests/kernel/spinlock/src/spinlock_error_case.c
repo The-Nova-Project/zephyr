@@ -3,7 +3,6 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include "zephyr/ztest_test_new.h"
 #include <zephyr/kernel.h>
 #include <zephyr/ztest.h>
 #include <zephyr/spinlock.h>
@@ -15,20 +14,15 @@ static struct k_spinlock mylock;
 static k_spinlock_key_t key;
 
 static ZTEST_DMEM volatile bool valid_assert;
-static ZTEST_DMEM volatile bool unlock_after_assert;
 
-
-static inline void set_assert_valid(bool valid, bool unlock)
+static inline void set_assert_valid(bool valid)
 {
 	valid_assert = valid;
-	unlock_after_assert = unlock;
 }
 
 static void action_after_assert_fail(void)
 {
-	if (unlock_after_assert) {
-		k_spin_unlock(&lock, key);
-	}
+	k_spin_unlock(&lock, key);
 
 	ztest_test_pass();
 }
@@ -82,7 +76,7 @@ ZTEST(spinlock, test_spinlock_no_recursive)
 
 	key = k_spin_lock(&lock);
 
-	set_assert_valid(true, true);
+	set_assert_valid(true);
 	re = k_spin_lock(&lock);
 
 	ztest_test_fail();
@@ -101,7 +95,7 @@ ZTEST(spinlock, test_spinlock_unlock_error)
 {
 	key = k_spin_lock(&lock);
 
-	set_assert_valid(true, true);
+	set_assert_valid(true);
 	k_spin_unlock(&mylock, key);
 
 	ztest_test_fail();
@@ -120,48 +114,8 @@ ZTEST(spinlock, test_spinlock_release_error)
 {
 	key = k_spin_lock(&lock);
 
-	set_assert_valid(true, true);
+	set_assert_valid(true);
 	k_spin_release(&mylock);
 
 	ztest_test_fail();
-}
-
-/**
- * @brief Test unlocking spinlock held over the time limit
- *
- * @details Validate unlocking spinlock held past the time limit will trigger
- * assertion.
- *
- * @ingroup kernel_spinlock_tests
- *
- * @see k_spin_unlock()
- */
-ZTEST(spinlock, test_spinlock_lock_time_limit)
-{
-#ifndef CONFIG_SPIN_LOCK_TIME_LIMIT
-	ztest_test_skip();
-	return;
-#else
-	if (CONFIG_SPIN_LOCK_TIME_LIMIT == 0) {
-		ztest_test_skip();
-		return;
-	}
-
-
-	struct k_spinlock timeout_lock;
-
-	TC_PRINT("testing lock time limit, limit is %d!\n", CONFIG_SPIN_LOCK_TIME_LIMIT);
-
-
-	key = k_spin_lock(&timeout_lock);
-
-	/* spin here for at least 2x the cycle limit */
-	for (volatile int i = 0; i < CONFIG_SPIN_LOCK_TIME_LIMIT*2; i++) {
-	}
-
-	set_assert_valid(true, false);
-	k_spin_unlock(&timeout_lock, key);
-
-	ztest_test_fail();
-#endif
 }

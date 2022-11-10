@@ -5,7 +5,7 @@ description: Nordic nRF family TEMP node
 
 compatible: "nordic,nrf-temp"
 
-include: sensor-device.yaml
+include: base.yaml
 
 properties:
     reg:

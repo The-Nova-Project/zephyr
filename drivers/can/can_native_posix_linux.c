@@ -32,6 +32,7 @@ struct can_npl_data {
 	struct can_filter_context filters[CONFIG_CAN_MAX_FILTER];
 	struct k_mutex filter_mutex;
 	struct k_sem tx_idle;
+	struct k_sem tx_done;
 	can_tx_callback_t tx_callback;
 	void *tx_user_data;
 	bool loopback;
@@ -94,14 +95,19 @@ static void rx_thread(void *arg1, void *arg2, void *arg3)
 			count = linux_socketcan_read_data(data->dev_fd, (void *)(&sframe),
 							   sizeof(sframe), &msg_confirm);
 			if (msg_confirm) {
-				data->tx_callback(dev, 0, data->tx_user_data);
+				if (data->tx_callback != NULL) {
+					data->tx_callback(dev, 0, data->tx_user_data);
+				} else {
+					k_sem_give(&data->tx_done);
+				}
+
 				k_sem_give(&data->tx_idle);
 
-				if (!data->loopback) {
+				if (!data->loopback || !data->started) {
 					continue;
 				}
 			}
-			if ((count <= 0) || !data->started) {
+			if (count <= 0) {
 				break;
 			}
 
@@ -109,8 +115,9 @@ static void rx_thread(void *arg1, void *arg2, void *arg3)
 
 			LOG_DBG("Received %d bytes. Id: 0x%x, ID type: %s %s",
 				frame.dlc, frame.id,
-				(frame.flags & CAN_FRAME_IDE) != 0 ? "extended" : "standard",
-				(frame.flags & CAN_FRAME_RTR) != 0 ? ", RTR frame" : "");
+				frame.id_type == CAN_STANDARD_IDENTIFIER ?
+						"standard" : "extended",
+				frame.rtr == CAN_DATAFRAME ? "" : ", RTR frame");
 
 			dispatch_frame(dev, &frame);
 		}
@@ -131,32 +138,16 @@ static int can_npl_send(const struct device *dev, const struct can_frame *frame,
 
 	LOG_DBG("Sending %d bytes on %s. Id: 0x%x, ID type: %s %s",
 		frame->dlc, dev->name, frame->id,
-		(frame->flags & CAN_FRAME_IDE) != 0 ? "extended" : "standard",
-		(frame->flags & CAN_FRAME_RTR) != 0 ? ", RTR frame" : "");
-
-	__ASSERT_NO_MSG(callback != NULL);
+		frame->id_type == CAN_STANDARD_IDENTIFIER ?
+				  "standard" : "extended",
+		frame->rtr == CAN_DATAFRAME ? "" : ", RTR frame");
 
 #ifdef CONFIG_CAN_FD_MODE
-	if ((frame->flags & ~(CAN_FRAME_IDE | CAN_FRAME_RTR |
-		CAN_FRAME_FDF | CAN_FRAME_BRS)) != 0) {
-		LOG_ERR("unsupported CAN frame flags 0x%02x", frame->flags);
-		return -ENOTSUP;
-	}
-
-	if ((frame->flags & CAN_FRAME_FDF) != 0) {
-		if (!data->mode_fd) {
-			return -ENOTSUP;
-		}
-
+	if (data->mode_fd && frame->fd == 1) {
 		max_dlc = CANFD_MAX_DLC;
 		mtu = CANFD_MTU;
 	}
-#else /* CONFIG_CAN_FD_MODE */
-	if ((frame->flags & ~(CAN_FRAME_IDE | CAN_FRAME_RTR)) != 0) {
-		LOG_ERR("unsupported CAN frame flags 0x%02x", frame->flags);
-		return -ENOTSUP;
-	}
-#endif /* !CONFIG_CAN_FD_MODE */
+#endif /* CONFIG_CAN_FD_MODE */
 
 	if (frame->dlc > max_dlc) {
 		LOG_ERR("DLC of %d exceeds maximum (%d)", frame->dlc, max_dlc);
@@ -186,6 +177,10 @@ static int can_npl_send(const struct device *dev, const struct can_frame *frame,
 		LOG_ERR("Cannot send CAN data len %d (%d)", sframe.len, -errno);
 	}
 
+	if (callback == NULL) {
+		k_sem_take(&data->tx_done, K_FOREVER);
+	}
+
 	return 0;
 }
 
@@ -197,12 +192,13 @@ static int can_npl_add_rx_filter(const struct device *dev, can_rx_callback_t cb,
 	int filter_id = -ENOSPC;
 
 	LOG_DBG("Setting filter ID: 0x%x, mask: 0x%x", filter->id,
-		filter->mask);
-
-	if ((filter->flags & ~(CAN_FILTER_IDE | CAN_FILTER_DATA | CAN_FILTER_RTR)) != 0) {
-		LOG_ERR("unsupported CAN filter flags 0x%02x", filter->flags);
-		return -ENOTSUP;
-	}
+		    filter->id_mask);
+	LOG_DBG("Filter type: %s ID %s mask",
+		filter->id_type == CAN_STANDARD_IDENTIFIER ?
+				   "standard" : "extended",
+		((filter->id_type && (filter->id_mask == CAN_STD_ID_MASK)) ||
+		(!filter->id_type && (filter->id_mask == CAN_EXT_ID_MASK))) ?
+		"with" : "without");
 
 	k_mutex_lock(&data->filter_mutex, K_FOREVER);
 
@@ -396,9 +392,9 @@ static int can_npl_get_core_clock(const struct device *dev, uint32_t *rate)
 	return 0;
 }
 
-static int can_npl_get_max_filters(const struct device *dev, bool ide)
+static int can_npl_get_max_filters(const struct device *dev, enum can_ide id_type)
 {
-	ARG_UNUSED(ide);
+	ARG_UNUSED(id_type);
 
 	return CONFIG_CAN_MAX_FILTER;
 }
@@ -459,6 +455,7 @@ static int can_npl_init(const struct device *dev)
 
 	k_mutex_init(&data->filter_mutex);
 	k_sem_init(&data->tx_idle, 1, 1);
+	k_sem_init(&data->tx_done, 0, 1);
 
 	data->dev_fd = linux_socketcan_iface_open(cfg->if_name);
 	if (data->dev_fd < 0) {

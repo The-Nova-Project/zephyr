@@ -225,11 +225,12 @@ Nucleo U575ZI Q board has 6 U(S)ARTs. The Zephyr console output is assigned to
 USART1. Default settings are 115200 8N1.
 
 
-Programming and Debugging
-*************************
+Programming
+***********
 
-Nucleo U575ZI-Q board includes an ST-LINK/V3 embedded debug tool interface.
-This probe allows to flash the board using various tools.
+Applications for the ``nucleo_u575zi_q`` board configuration can be built and
+flashed in the usual way (see :ref:`build_an_application` and
+:ref:`application_run` for more details).
 
 Flashing
 ========
@@ -237,11 +238,10 @@ Flashing
 Board is configured to be flashed using west STM32CubeProgrammer runner.
 Installation of `STM32CubeProgrammer`_ is then required to flash the board.
 
-Alternatively, openocd (provided in Zephyr SDK), JLink and pyocd can also be
-used to flash and debug the board if west is told to use it as runner,
-which can be done by passing either ``-r openocd``, ``-r jlink`` or ``-r pyocd``.
-
-For pyocd additional target information needs to be installed.
+Alternatively pyocd and JLink can be used to flash and debug the board.
+JLink works out of the box if west is told to use it as runner,
+which can be done by passing ``-r jlink``.
+For pyocd (``-r pyocd``) additional target information needs to be installed.
 This can be done by executing the following commands.
 
 .. code-block:: console
@@ -279,44 +279,29 @@ You should see the following message on the console:
 Debugging
 =========
 
-Default flasher for this board is openocd. It could be used in the usual way.
+STM32U5 support is not currently supported in openocd. As a temporary workaround,
+user can use `STMicroelectronics customized version of OpenOCD`_ to debug the
+the Nucleo U575ZI Q.
+For this you need to fetch this repo, checkout branch "openocd-cubeide-r3" and
+build openocd following the instructions provided in the README of the project.
+Then, build zephyr project indicating the openocd location in west build command.
+
 Here is an example for the :ref:`blinky-sample` application.
 
 .. zephyr-app-commands::
    :zephyr-app: samples/basic/blinky
    :board: nucleo_u575zi_q
-   :goals: debug
+   :gen-args: -DOPENOCD="<path_to_openocd>/openocd/src/openocd" -DOPENOCD_DEFAULT_PATH="<path_to_openocd>/openocd/tcl/"
+   :goals: build
 
-Building a secure/non-secure with Arm |reg| TrustZone |reg|
-===========================================================
+Then, indicate openocd as the chosen runner in flash and debug commands:
 
-The TF-M applications can be run on this board, thanks to its Arm |reg| TrustZone |reg|
-support.
-In TF-M configuration, Zephyr is run on the non-secure domain. A non-secure image
-can be generated using ``nucleo_u575zi_q_ns`` as build target.
 
-.. code-block:: bash
+   .. code-block:: console
 
-   $ west build -b nucleo_u575zi_q_ns path/to/source/directory
+      $ west flash -r openocd
+      $ west debug -r openocd
 
-Note: When building the ``*_ns`` image with TF-M, ``build/tfm/postbuild.sh`` bash script
-is run automatically in a post-build step to make some required flash layout changes.
-
-Once the build is completed, run the following script to initialize the option bytes.
-
-.. code-block:: bash
-
-   $ build/tfm/regression.sh
-
-Finally, to flash the board, run:
-
-.. code-block:: bash
-
-   $ west flash
-
-Note: Check the ``build/tfm`` directory to ensure that the commands required by these scripts
-(``readlink``, etc.) are available on your system. Please also check ``STM32_Programmer_CLI``
-(which is used for initialization) is available in the PATH.
 
 .. _STM32 Nucleo-144 board User Manual:
    http://www.st.com/resource/en/user_manual/dm00615305.pdf

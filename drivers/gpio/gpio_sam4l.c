@@ -13,7 +13,6 @@
 #include <zephyr/init.h>
 #include <soc.h>
 #include <zephyr/drivers/gpio.h>
-#include <zephyr/irq.h>
 
 #include "gpio_utils.h"
 

@@ -8,7 +8,6 @@
 #define __SOC_H__
 
 #ifndef _ASMLANGUAGE
-#include <soc/soc.h>
 #include <rom/ets_sys.h>
 #include <rom/spi_flash.h>
 #include <zephyr/types.h>

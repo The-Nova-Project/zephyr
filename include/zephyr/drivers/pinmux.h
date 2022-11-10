@@ -21,7 +21,6 @@
 
 #include <zephyr/types.h>
 #include <zephyr/device.h>
-#include <zephyr/toolchain.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -85,8 +84,8 @@ __subsystem struct pinmux_driver_api {
 	pmux_input input;
 };
 
-__deprecated static inline int pinmux_pin_set(const struct device *dev,
-					      uint32_t pin, uint32_t func)
+static inline int pinmux_pin_set(const struct device *dev, uint32_t pin,
+				 uint32_t func)
 {
 	const struct pinmux_driver_api *api =
 		(const struct pinmux_driver_api *)dev->api;
@@ -94,8 +93,8 @@ __deprecated static inline int pinmux_pin_set(const struct device *dev,
 	return api->set(dev, pin, func);
 }
 
-__deprecated static inline int pinmux_pin_get(const struct device *dev,
-					      uint32_t pin, uint32_t *func)
+static inline int pinmux_pin_get(const struct device *dev, uint32_t pin,
+				 uint32_t *func)
 {
 	const struct pinmux_driver_api *api =
 		(const struct pinmux_driver_api *)dev->api;
@@ -103,8 +102,8 @@ __deprecated static inline int pinmux_pin_get(const struct device *dev,
 	return api->get(dev, pin, func);
 }
 
-__deprecated static inline int pinmux_pin_pullup(const struct device *dev,
-						 uint32_t pin, uint8_t func)
+static inline int pinmux_pin_pullup(const struct device *dev, uint32_t pin,
+				    uint8_t func)
 {
 	const struct pinmux_driver_api *api =
 		(const struct pinmux_driver_api *)dev->api;
@@ -112,9 +111,9 @@ __deprecated static inline int pinmux_pin_pullup(const struct device *dev,
 	return api->pullup(dev, pin, func);
 }
 
-__deprecated static inline int pinmux_pin_input_enable(const struct device *dev,
-						       uint32_t pin,
-						       uint8_t func)
+static inline int pinmux_pin_input_enable(const struct device *dev,
+					  uint32_t pin,
+					  uint8_t func)
 {
 	const struct pinmux_driver_api *api =
 		(const struct pinmux_driver_api *)dev->api;

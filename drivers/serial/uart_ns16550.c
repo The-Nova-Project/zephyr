@@ -32,7 +32,6 @@
 #include <zephyr/pm/policy.h>
 #include <zephyr/sys/sys_io.h>
 #include <zephyr/spinlock.h>
-#include <zephyr/irq.h>
 
 #include "uart_ns16550.h"
 

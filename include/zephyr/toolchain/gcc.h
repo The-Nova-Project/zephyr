@@ -618,7 +618,7 @@ do {                                                                    \
  */
 #define Z_IS_POW2(x) (((x) != 0) && (((x) & ((x)-1)) == 0))
 
-#if defined(CONFIG_ASAN) && defined(__clang__)
+#ifdef CONFIG_ASAN
 #define __noasan __attribute__((no_sanitize("address")))
 #else
 #define __noasan /**/

@@ -31,8 +31,6 @@ source "drivers/timer/Kconfig"
 
 source "drivers/entropy/Kconfig"
 
-source "drivers/pcie/Kconfig"
-
 source "drivers/gpio/Kconfig"
 
 source "drivers/interrupt_controller/Kconfig.shared_irq"
@@ -135,18 +133,8 @@ source "drivers/pinctrl/Kconfig"
 
 source "drivers/mbox/Kconfig"
 
-source "drivers/mm/Kconfig"
-
-source "drivers/power_domain/Kconfig"
-
-source "drivers/usb_c/Kconfig"
-
 source "drivers/reset/Kconfig"
 
-source "drivers/mipi_dsi/Kconfig"
 
-source "drivers/coredump/Kconfig"
-
-source "drivers/xen/Kconfig"
 
 endmenu

@@ -19,7 +19,6 @@
 
 #include "i2s_ll_stm32.h"
 #include <zephyr/logging/log.h>
-#include <zephyr/irq.h>
 LOG_MODULE_REGISTER(i2s_ll_stm32);
 
 /* FIXME change to

@@ -21,19 +21,15 @@
 static inline bool can_utils_filter_match(const struct can_frame *frame,
 					  struct can_filter *filter)
 {
-	if (((frame->flags & CAN_FRAME_IDE) != 0) && ((filter->flags & CAN_FILTER_IDE) == 0)) {
+	if (frame->id_type != filter->id_type) {
 		return false;
 	}
 
-	if (((frame->flags & CAN_FRAME_RTR) == 0) && (filter->flags & CAN_FILTER_DATA) == 0) {
+	if ((frame->rtr ^ filter->rtr) & filter->rtr_mask) {
 		return false;
 	}
 
-	if (((frame->flags & CAN_FRAME_RTR) != 0) && (filter->flags & CAN_FILTER_RTR) == 0) {
-		return false;
-	}
-
-	if ((frame->id ^ filter->id) & filter->mask) {
+	if ((frame->id ^ filter->id) & filter->id_mask) {
 		return false;
 	}
 

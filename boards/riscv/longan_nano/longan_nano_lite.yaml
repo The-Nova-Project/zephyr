@@ -7,5 +7,3 @@ toolchain:
   - xtools
 flash: 64
 ram: 20
-supported:
-  - watchdog

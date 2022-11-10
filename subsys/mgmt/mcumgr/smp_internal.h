@@ -12,7 +12,6 @@
 extern "C" {
 #endif
 
-struct smp_transport;
 struct zephyr_smp_transport;
 struct net_buf;
 
@@ -21,17 +20,11 @@ struct net_buf;
  *
  * This function always consumes the supplied net_buf.
  *
- * @param smtp                  The transport to use to send the corresponding
+ * @param zst                   The transport to use to send the corresponding
  *                                  response(s).
  * @param nb                    The request packet to process.
  */
-void smp_rx_req(struct smp_transport *smtp, struct net_buf *nb);
-
-__deprecated static inline
-void zephyr_smp_rx_req(struct zephyr_smp_transport *smpt, struct net_buf *nb)
-{
-	smp_rx_req((struct smp_transport *)smpt, nb);
-}
+void zephyr_smp_rx_req(struct zephyr_smp_transport *zst, struct net_buf *nb);
 
 /**
  * @brief Allocates a response buffer.
@@ -44,14 +37,7 @@ void zephyr_smp_rx_req(struct zephyr_smp_transport *smpt, struct net_buf *nb)
  * @return	Newly-allocated buffer on success
  *		NULL on failure.
  */
-void *smp_alloc_rsp(const void *req, void *arg);
-
-__deprecated static inline
-void *zephyr_smp_alloc_rsp(const void *req, void *arg)
-{
-	return smp_alloc_rsp(req, arg);
-}
-
+void *zephyr_smp_alloc_rsp(const void *req, void *arg);
 
 /**
  * @brief Frees an allocated buffer.
@@ -59,13 +45,7 @@ void *zephyr_smp_alloc_rsp(const void *req, void *arg)
  * @param buf		The buffer to free.
  * @param arg		The streamer providing the callback.
  */
-void smp_free_buf(void *buf, void *arg);
-
-__deprecated static inline
-void zephyr_smp_free_buf(void *buf, void *arg)
-{
-	smp_free_buf(buf, arg);
-}
+void zephyr_smp_free_buf(void *buf, void *arg);
 
 #ifdef __cplusplus
 }

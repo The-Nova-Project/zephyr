@@ -1464,7 +1464,7 @@ static uint8_t smp_br_pairing_failed(struct bt_smp_br *smp, struct net_buf *buf)
 {
 	struct bt_smp_pairing_fail *req = (void *)buf->data;
 
-	BT_ERR("pairing failed (peer reason 0x%x)", req->reason);
+	BT_ERR("reason 0x%x", req->reason);
 
 	smp_pairing_br_complete(smp, req->reason);
 	smp_br_reset(smp);
@@ -1522,7 +1522,7 @@ static uint8_t smp_br_ident_addr_info(struct bt_smp_br *smp,
 	bt_addr_copy(&addr.a, &conn->br.dst);
 	addr.type = BT_ADDR_LE_PUBLIC;
 
-	if (!bt_addr_le_eq(&addr, &req->addr)) {
+	if (bt_addr_le_cmp(&addr, &req->addr)) {
 		return BT_SMP_ERR_UNSPECIFIED;
 	}
 
@@ -3891,7 +3891,7 @@ static uint8_t smp_pairing_failed(struct bt_smp *smp, struct net_buf *buf)
 	const struct bt_conn_auth_cb *smp_auth_cb = latch_auth_cb(smp);
 	struct bt_smp_pairing_fail *req = (void *)buf->data;
 
-	BT_ERR("pairing failed (peer reason 0x%x)", req->reason);
+	BT_ERR("reason 0x%x", req->reason);
 
 	if (atomic_test_and_clear_bit(smp->flags, SMP_FLAG_USER) ||
 	    atomic_test_and_clear_bit(smp->flags, SMP_FLAG_DISPLAY)) {
@@ -3944,7 +3944,7 @@ static uint8_t smp_ident_addr_info(struct bt_smp *smp, struct net_buf *buf)
 		return BT_SMP_ERR_INVALID_PARAMS;
 	}
 
-	if (!bt_addr_le_eq(&conn->le.dst, &req->addr)) {
+	if (bt_addr_le_cmp(&conn->le.dst, &req->addr) != 0) {
 		struct bt_keys *keys = bt_keys_find_addr(conn->id, &req->addr);
 
 		if (keys) {
@@ -5840,12 +5840,6 @@ void bt_smp_update_keys(struct bt_conn *conn)
 				     sizeof(conn->le.keys->ltk.rand));
 			(void)memset(conn->le.keys->ltk.ediv, 0,
 				     sizeof(conn->le.keys->ltk.ediv));
-		} else if (IS_ENABLED(CONFIG_BT_LOG_SNIFFER_INFO)) {
-			uint8_t ltk[16];
-
-			sys_memcpy_swap(ltk, smp->tk, conn->le.keys->enc_size);
-			BT_INFO("SC LTK: 0x%s (No bonding)",
-				bt_hex(ltk, conn->le.keys->enc_size));
 		}
 	} else {
 		conn->le.keys->flags &= ~BT_KEYS_SC;
